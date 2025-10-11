@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+DIR="${BACKUP_DIR:-/backups}"
+if [ ! -d "$DIR" ]; then
+  echo "Backup directory not found: $DIR" >&2
+  exit 1
+fi
+echo "These are the backups you have got:"
+ls -lht "$DIR"

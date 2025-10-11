@@ -1,0 +1,22 @@
+#!/bin/sh
+set -eu
+HOST="${MYSQL_HOST:-127.0.0.1}"
+PORT="${MYSQL_PORT:-3306}"
+USER="${MYSQL_USER:-root}"
+PASSWORD="${MYSQL_PASSWORD:-${MYSQL_ROOT_PASSWORD:-}}"
+DB="${MYSQL_DATABASE:-}"
+IN_FILE="${1:-}"
+if [ -z "$IN_FILE" ]; then
+  echo "Usage: restore <dump.sql>" >&2
+  exit 1
+fi
+if [ ! -f "$IN_FILE" ]; then
+  echo "File not found: $IN_FILE" >&2
+  exit 1
+fi
+if [ -n "$DB" ]; then
+  mysql -h "$HOST" -P "$PORT" -u "$USER" ${PASSWORD:+-p"$PASSWORD"} "$DB" < "$IN_FILE"
+else
+  mysql -h "$HOST" -P "$PORT" -u "$USER" ${PASSWORD:+-p"$PASSWORD"} < "$IN_FILE"
+fi
+echo "Restored from $IN_FILE"

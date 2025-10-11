@@ -1,0 +1,17 @@
+#!/bin/sh
+set -eu
+HOST="${MYSQL_HOST:-127.0.0.1}"
+PORT="${MYSQL_PORT:-3306}"
+USER="${MYSQL_USER:-root}"
+PASSWORD="${MYSQL_PASSWORD:-${MYSQL_ROOT_PASSWORD:-}}"
+DB="${MYSQL_DATABASE:-}"
+OUT_DIR="${BACKUP_DIR:-/backups}"
+mkdir -p "$OUT_DIR"
+TS="$(date +%Y%m%d_%H%M%S)"
+OUT_FILE="${OUT_DIR}/${DB:-all}_${TS}.sql"
+if [ -n "$DB" ]; then
+  mysqldump -h "$HOST" -P "$PORT" -u "$USER" ${PASSWORD:+-p"$PASSWORD"} "$DB" > "$OUT_FILE"
+else
+  mysqldump -h "$HOST" -P "$PORT" -u "$USER" ${PASSWORD:+-p"$PASSWORD"} --all-databases > "$OUT_FILE"
+fi
+echo "$OUT_FILE"

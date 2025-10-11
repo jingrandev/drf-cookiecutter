@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+import shutil
 import subprocess
 import sys
 
@@ -63,6 +64,28 @@ def remove_license_files():
             os.remove(notice_file)
 
 
+def cleanup_db_artifacts():
+    """Remove artifacts for the non-selected database engine"""
+    database_engine = "{{ cookiecutter.database_engine }}"
+    cleanup_map = {
+        "mysql": [
+            os.path.join(PROJECT_DIRECTORY, ".envs", ".postgres"),
+            os.path.join(PROJECT_DIRECTORY, "compose", "production", "postgres"),
+        ],
+        "postgres": [
+            os.path.join(PROJECT_DIRECTORY, ".envs", ".mysql"),
+            os.path.join(PROJECT_DIRECTORY, "compose", "production", "mysql"),
+        ],
+    }
+    for target in cleanup_map.get(database_engine, []):
+        if os.path.isdir(target):
+            shutil.rmtree(target)
+            print(f"Removed directory: {target}")
+        elif os.path.exists(target):
+            os.remove(target)
+            print(f"Removed file: {target}")
+
+
 def generate_requirements_files():
     """Generate requirements files using uv"""
     # Create requirements directory if it doesn't exist
@@ -116,6 +139,9 @@ def main():
 
     # Remove unnecessary license files
     remove_license_files()
+
+    # Cleanup non-selected database artifacts
+    cleanup_db_artifacts()
 
     # Generate requirements files
     generate_requirements_files()

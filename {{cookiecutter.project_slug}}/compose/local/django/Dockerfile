@@ -10,8 +10,13 @@ ARG BUILD_ENVIRONMENT=local
 RUN apt-get update && apt-get install --no-install-recommends -y \
   # dependencies for building Python packages
   build-essential \
-  # psycopg dependencies
+  {%- if cookiecutter.database_engine == 'postgres' %}
+  # psycopg build deps
   libpq-dev
+  {%- elif cookiecutter.database_engine == 'mysql' %}
+  # mysqlclient build deps
+  default-libmysqlclient-dev
+  {%- endif %}
 
 # Requirements are installed here to ensure they will be cached.
 COPY ./requirements/ ./requirements/
@@ -34,8 +39,13 @@ WORKDIR ${APP_HOME}
 
 # Install required system dependencies
 RUN apt-get update && apt-get install --no-install-recommends -y \
-  # psycopg dependencies
+  {%- if cookiecutter.database_engine == 'postgres' %}
+  # psycopg runtime deps
   libpq-dev \
+  {%- elif cookiecutter.database_engine == 'mysql' %}
+  # mysqlclient runtime library
+  libmariadb3 \
+  {%- endif %}
   # Translations dependencies
   gettext \
   # wait-for-it
