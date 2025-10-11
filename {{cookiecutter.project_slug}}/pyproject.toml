@@ -68,84 +68,46 @@ prod = [
 
 ]
 
-[tool.ruff.lint]
-exclude = ["manage.py"]
+[tool.ruff]
+target-version = "py{{ cookiecutter.python_version|replace('.', '') }}"
+
+line-length = 119
+# Exclude a variety of commonly ignored directories.
+extend-exclude = [
+  "*/migrations/*.py",
+  "protos/*",
+  "staticfiles/*",
+]
+lint.select = [
+  "B",   # Bugbear potential errors
+  "C4",  # comprehension optimization
+  "DJ",  # Django dedicated rules
+  "E",   # PEP8 basic errors
+  "F",   # Pyflakes logical errors
+  "I",   # import sorting
+  "PGH", # Pytest dedicated rules
+  "UP",  # new Python syntax upgrade
+  "W",   # PEP8 warnings
+]
+lint.ignore = [
+  "COM812", # Missing trailing comma in Python 3.6+ collection literals
+  "ISC001", # Implicitly concatenated string literals on one line
+  "RUF012", # Mutable class attributes should be annotated with `typing.ClassVar`
+  "S101",   # Use of assert detected https://docs.astral.sh/ruff/rules/assert/
+  "SIM102", # sometimes it's better to nest
+  "UP038",  # Checks for uses of isinstance/issubclass that take a tuple
+]
+lint.exclude = [ "manage.py" ]
 # The fixes in extend-unsafe-fixes will require
 # provide the `--unsafe-fixes` flag when fixing.
-extend-unsafe-fixes = [
-  "UP038"
+lint.extend-unsafe-fixes = [
+  "UP038",
 ]
-ignore = [
-  "S101", # Use of assert detected https://docs.astral.sh/ruff/rules/assert/
-  "RUF012", # Mutable class attributes should be annotated with `typing.ClassVar`
-  "SIM102", # sometimes it's better to nest
-  "UP038", # Checks for uses of isinstance/issubclass that take a tuple
-  "COM812", # Missing trailing comma in Python 3.6+ collection literals
-  "ISC001" # Implicitly concatenated string literals on one line
-]
-select = [
-  "F",
-  "E",
-  "W",
-  "C90",
-  "I",
-  "N",
-  "UP",
-  "YTT",
-  # "ANN", # flake8-annotations: we should support this in the future but 100+ errors atm
-  "ASYNC",
-  "S",
-  "BLE",
-  "FBT",
-  "B",
-  "A",
-  "COM",
-  "C4",
-  "DTZ",
-  "T10",
-  "DJ",
-  "EM",
-  "EXE",
-  "FA",
-  "ISC",
-  "ICN",
-  "G",
-  "INP",
-  "PIE",
-  "T20",
-  "PYI",
-  "PT",
-  "Q",
-  "RSE",
-  "RET",
-  "SLF",
-  "SLOT",
-  "SIM",
-  "TID",
-  "TCH",
-  "INT",
-  # "ARG", # Unused function argument
-  "PTH",
-  "ERA",
-  "PD",
-  "PGH",
-  "PL",
-  "TRY",
-  "FLY",
-  # "NPY",
-  # "AIR",
-  "PERF",
-  # "FURB",
-  # "LOG",
-  "RUF"
-]
-
-[tool.ruff.lint.isort]
-force-single-line = true
+lint.isort.force-single-line = true
 
 [tool.black]
 line-length = 119
-target-version = "py{{ cookiecutter.python_version|replace('.', '') }}"
+target-version = [ "py{{ cookiecutter.python_version|replace('.', '') }}" ]
 
 [tool.djlint]
 blank_line_after_tag = "load,extends"
@@ -201,15 +163,6 @@ env = [
   "DJANGO_SETTINGS_MODULE=config.settings.test"
 ]
 python_files = ["test_*.py", "*_test.py", "tests.py"]
-
-[tool.ruff]
-# Exclude a variety of commonly ignored directories.
-extend-exclude = [
-  "*/migrations/*.py",
-  "staticfiles/*"
-]
-line-length = 119
-target-version = "py{{ cookiecutter.python_version|replace('.', '') }}"
 
 [tool.coverage]
 
