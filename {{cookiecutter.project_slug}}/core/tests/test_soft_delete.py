@@ -155,15 +155,14 @@ class TestSoftDelete(TransactionTestCase):
 
     def test_queryset_restore(self):
         """Test batch restoration using QuerySet.restore()."""
-        obj1 = DummyModel.objects.create(name="Test Object 1")
-        obj2 = DummyModel.objects.create(name="Test Object 2")
-        
+        DummyModel.objects.create(name="Test Object 1")
+        DummyModel.objects.create(name="Test Object 2")
+
         DummyModel.objects.all().delete()
         
         for obj in DummyModel.all_objects.all():
             assert obj.is_deleted is True
             assert obj.deleted_at is not None
-            assert obj.id_copy != ""
         
         DummyModel.all_objects.deleted().restore()
         

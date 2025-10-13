@@ -1,4 +1,4 @@
-# ruff: noqa: PGH004, F405
+# ruff: noqa: PGH004, F405, F403
 import os
 
 from .base import *

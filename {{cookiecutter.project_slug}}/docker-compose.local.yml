@@ -22,7 +22,7 @@ services:
       mysql:
         condition: service_healthy
     environment:
-      DATABASE_URL: mysql://root:password@mysql:3306/{{ cookiecutter.project_slug }}?charset=utf8mb4
+      DATABASE_URL: mysql://app:password@mysql:3306/{{ cookiecutter.project_slug }}?charset=utf8mb4
     {%- endif %}
     ports:
       - "${DJANGO_PORT:-8000}:8000"
@@ -37,7 +37,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -49,15 +49,15 @@ services:
     container_name: {{ cookiecutter.project_slug }}_mysql
     environment:
       MYSQL_DATABASE: {{ cookiecutter.project_slug }}
-      MYSQL_USER: root
+      MYSQL_USER: app
       MYSQL_PASSWORD: password
       MYSQL_ROOT_PASSWORD: password
       MYSQL_TCP_PORT: 3306
-    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    # Use default auth plugin of MySQL 8.4; set charset/collation via client or schema if needed
     ports:
-      - "3306:3306"
+      - "${MYSQL_PORT:-3306}:3306"
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -ppassword --silent"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uapp -ppassword --silent"]
       interval: 5s
       timeout: 3s
       retries: 10

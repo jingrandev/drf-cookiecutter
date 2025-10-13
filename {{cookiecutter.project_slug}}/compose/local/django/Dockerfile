@@ -15,7 +15,9 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   libpq-dev
   {%- elif cookiecutter.database_engine == 'mysql' %}
   # mysqlclient build deps
-  default-libmysqlclient-dev
+  pkg-config \
+  default-libmysqlclient-dev \
+  python3-dev
   {%- endif %}
 
 # Requirements are installed here to ensure they will be cached.

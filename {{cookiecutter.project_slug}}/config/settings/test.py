@@ -1,4 +1,4 @@
-# ruff: noqa: PGH004, F405
+# ruff: noqa: PGH004, F405, F403
 from .base import *
 
 # SECURITY WARNING: don't run with debug turned on in production!
