@@ -7,7 +7,6 @@
 ### Prerequisites
 
 - Python {{ cookiecutter.python_version }}+
-- pip
 - uv (install via `pipx install uv` or `brew install uv`)
 
 ### Bootstrap
