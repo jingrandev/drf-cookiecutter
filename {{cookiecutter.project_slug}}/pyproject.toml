@@ -38,6 +38,7 @@ dependencies = [
   "django-model-utils>=5.0.0",
   "django-extensions>=4.1.0",
   "djangorestframework>=3.15.0",
+  "drf-nested-routers>=0.95",
   "drf-spectacular>=0.27.1",
   "loguru>=0.7.3",
   "djoser>=2.3.1",
@@ -57,6 +58,9 @@ dev = [
   "django-coverage-plugin>=3.1.0",
   "django-debug-toolbar>=4.3.0",
   "django-silk>=5.1.0",
+  "django-stubs>=5.2.8",
+  "djangorestframework-stubs>=3.16.6",
+  "mypy>=1.19.1",
   "pytest>=8.3.5",
   "pytest-cov>=6.0.0",
   "pytest-django>=4.10.0",
@@ -73,13 +77,14 @@ prod = [
 [tool.ruff]
 target-version = "py{{ cookiecutter.python_version|replace('.', '') }}"
 
-line-length = 119
+line-length = 88
 # Exclude a variety of commonly ignored directories.
 extend-exclude = [
   "*/migrations/*.py",
   "protos/*",
   "staticfiles/*",
 ]
+format.skip-magic-trailing-comma = false
 lint.select = [
   "B",   # Bugbear potential errors
   "C4",  # comprehension optimization
@@ -93,6 +98,8 @@ lint.select = [
 ]
 lint.ignore = [
   "COM812", # Missing trailing comma in Python 3.6+ collection literals
+  "DJ001",
+  "DJ008",
   "ISC001", # Implicitly concatenated string literals on one line
   "RUF012", # Mutable class attributes should be annotated with `typing.ClassVar`
   "S101",   # Use of assert detected https://docs.astral.sh/ruff/rules/assert/
@@ -180,11 +187,13 @@ exclude_lines = [
 omit = [
   "*/migrations/*",
   "*/protos/*",
+  "*/scripts/*",
   "*/tests/*",
   "*/admin.py",
-  "*/apps.py"
+  "*/apps.py",
+  "config/*",
 ]
-source = ["core"]
+source = ["core", "apps"]
 
 [tool.tomlsort]
 all = false
@@ -195,19 +204,3 @@ sort_first = [
   "project",
   "dependency"
 ]
-
-[tool.tomlsort.overrides."project"]
-first = [
-  "name",
-  "version",
-  "description",
-  "authors",
-  "readme",
-  "requires-python",
-  "license",
-  "classifiers",
-  "dependencies"
-]
-
-[tool.tomlsort.overrides."tool.tomlsort"]
-table_keys = false

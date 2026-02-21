@@ -3,6 +3,8 @@ from rest_framework.routers import DefaultRouter
 from rest_framework.routers import Route
 from rest_framework.routers import SimpleRouter
 from rest_framework.routers import escape_curly_brackets
+from rest_framework_nested.routers import NestedDefaultRouter
+from rest_framework_nested.routers import NestedSimpleRouter
 
 
 def get_router_class():
@@ -16,7 +18,16 @@ def get_router():
 BaseRouter = get_router_class()
 
 
+def get_nested_router_class():
+    return NestedDefaultRouter if BaseRouter is DefaultRouter else NestedSimpleRouter
+
+
+def get_nested_router(*args, **kwargs):
+    return get_nested_router_class()(*args, **kwargs)
+
+
 class URLForceHyphenRouter(BaseRouter):
+    """Router forcing action url_path to use hyphenated segments."""
 
     def _get_dynamic_route(self, route, action):
         initkwargs = route.initkwargs.copy()
