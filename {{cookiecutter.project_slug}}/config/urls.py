@@ -7,6 +7,8 @@ The `urlpatterns` list routes URLs to views. For more information please see:
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
+from drf_spectacular.renderers import OpenApiJsonRenderer
+from drf_spectacular.renderers import OpenApiYamlRenderer
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 urlpatterns = [
@@ -19,7 +21,13 @@ urlpatterns = [
 if settings.SHOW_API_DOCS:
     urlpatterns += [
         # API Schema
-        path("schema/", SpectacularAPIView.as_view(), name="api-schema"),
+        path(
+            "schema/",
+            SpectacularAPIView.as_view(
+                renderer_classes=[OpenApiJsonRenderer, OpenApiYamlRenderer]
+            ),
+            name="api-schema",
+        ),
         # Swagger UI
         path(
             "docs/",

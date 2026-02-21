@@ -61,6 +61,7 @@ AUTH_USER_MODEL = "authentication.User"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "core.restframework.middleware.UnifiedAPIExceptionMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -152,7 +153,11 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+    "DEFAULT_RENDERER_CLASSES": [
+        "core.restframework.renderers.UnifiedJSONRenderer",
+    ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        "core.auth.authentication.CookieJWTAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.BasicAuthentication",
@@ -186,6 +191,10 @@ SPECTACULAR_SETTINGS = {
         "displayOperationId": True,
     },
     "COMPONENT_SPLIT_REQUEST": True,
+    "POSTPROCESSING_HOOKS": [
+        "core.restframework.openapi_hooks.wrap_enveloped_responses",
+        "core.restframework.openapi_hooks.inject_business_errors",
+    ],
 }
 
 SHOW_API_DOCS = env.bool("SHOW_API_DOCS", default=DEBUG)

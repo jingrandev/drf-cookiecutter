@@ -15,5 +15,7 @@ def test_health_check_endpoint(client):
     assert response.status_code == HTTPStatus.OK
     
     response_data = response.json()
-    assert response_data["status"] == "ok"
-    assert response_data["message"] == "API is running"
+    assert response_data["code"] == 0
+    assert response_data["message"] == "success"
+    assert response_data["data"]["status"] == "ok"
+    assert response_data["data"]["message"] == "API is running"

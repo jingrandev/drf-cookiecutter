@@ -29,9 +29,26 @@ class UserSerializer(BaseUserSerializer):
     class Meta(BaseUserSerializer.Meta):
         model = User
 
-        {% if cookiecutter.username_type == "email" %}
-        fields = ["id", "email", "name", "is_active", "is_staff"]
-        {% else %}
-        fields = ["id", "username", "email", "name", "is_active", "is_staff"]
-        {% endif %}
+        {%- if cookiecutter.username_type == "email" %}
+        fields = [
+            "id",
+            "email",
+            "name",
+            "first_name",
+            "last_name",
+            "is_active",
+            "is_staff",
+        ]
+        {%- else %}
+        fields = [
+            "id",
+            "username",
+            "email",
+            "name",
+            "first_name",
+            "last_name",
+            "is_active",
+            "is_staff",
+        ]
+        {%- endif %}
         read_only_fields = ["id", "is_active", "is_staff"]
