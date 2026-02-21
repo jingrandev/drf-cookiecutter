@@ -154,7 +154,7 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ],
     "DEFAULT_RENDERER_CLASSES": [
-        "core.restframework.renderers.UnifiedJSONRenderer",
+        "core.restframework.renderers.StandardResponseRenderer",
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "core.auth.authentication.CookieJWTAuthentication",

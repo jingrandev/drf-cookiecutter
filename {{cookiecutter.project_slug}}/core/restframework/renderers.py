@@ -3,7 +3,23 @@ from typing import Any
 from rest_framework.renderers import JSONRenderer
 
 
-class UnifiedJSONRenderer(JSONRenderer):
+class StandardResponseRenderer(JSONRenderer):
+    def is_envelope(self, data: Any) -> bool:
+        if not isinstance(data, dict):
+            return False
+        if not {"code", "data", "message"}.issubset(data.keys()):
+            return False
+        if not isinstance(data.get("message"), str):
+            return False
+        return True
+
+    def wrap_success(self, data: Any) -> dict[str, Any]:
+        return {
+            "code": 0,
+            "data": data if data is not None else {},
+            "message": "success",
+        }
+
     def render(
         self,
         data: Any,
@@ -21,43 +37,15 @@ class UnifiedJSONRenderer(JSONRenderer):
                 renderer_context=renderer_context,
             )
 
-        if response is not None and getattr(response, "status_code", 200) >= 400:
-            if isinstance(data, dict) and {"code", "data", "message"}.issubset(data.keys()):
-                return super().render(
-                    data,
-                    accepted_media_type=accepted_media_type,
-                    renderer_context=renderer_context,
-                )
-
-            message = "error"
-            if isinstance(data, dict) and "detail" in data:
-                message = str(data.get("detail"))
-
-            wrapped_error = {
-                "code": "REQ_1000" if 400 <= response.status_code < 500 else "SYS_5000",
-                "data": {"errors": data} if data is not None else {},
-                "message": message,
-            }
-            return super().render(
-                wrapped_error,
-                accepted_media_type=accepted_media_type,
-                renderer_context=renderer_context,
-            )
-
-        if isinstance(data, dict) and {"code", "data", "message"}.issubset(data.keys()):
+        if self.is_envelope(data):
             return super().render(
                 data,
                 accepted_media_type=accepted_media_type,
                 renderer_context=renderer_context,
             )
 
-        wrapped = {
-            "code": 0,
-            "data": data if data is not None else {},
-            "message": "success",
-        }
         return super().render(
-            wrapped,
+            self.wrap_success(data),
             accepted_media_type=accepted_media_type,
             renderer_context=renderer_context,
         )
