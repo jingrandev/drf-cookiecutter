@@ -37,6 +37,11 @@ fix: ## Fix all files in-place using ruff
 	ruff check --fix .
 	ruff format .
 
+.PHONY: check
+check: ## Run pre-commit hooks on all files
+	@command -v pre-commit > /dev/null 2>&1 || (printf "\033[1m\033[31mERROR\033[0m: pre-commit not installed\n" >&2; exit 1)
+	pre-commit run --all-files
+
 .PHONY: lint
 lint: ## Run linters on all files
 	ruff check .
