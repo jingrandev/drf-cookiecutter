@@ -5,14 +5,6 @@ help: ## Print this help menu
 
 .PHONY: require
 require: ## Check that prerequisites are installed.
-	@if ! command -v python3 > /dev/null; then \
-		printf "\033[1m\033[31mERROR\033[0m: python3 not installed\n" >&2 ; \
-		exit 1; \
-		fi
-	@if ! python3 -c "import sys; sys.exit(sys.version_info < (3,{{ cookiecutter.python_version.split('.')[1] }}))"; then \
-		printf "\033[1m\033[31mERROR\033[0m: python {{ cookiecutter.python_version }}+ required\n" >&2 ; \
-		exit 1; \
-		fi
 	@if ! command -v uv > /dev/null; then \
 		printf "\033[1m\033[31mERROR\033[0m: uv not installed.\n" >&2 ; \
 		printf "Please install with 'pipx install uv'\n" >&2 ; \
@@ -23,7 +15,7 @@ require: ## Check that prerequisites are installed.
 init: require .setup_complete ## Set up the local development environment
 
 .setup_complete: ## Internal helper to run the setup
-	uv venv --python {{ cookiecutter.python_version }} --seed && source .venv/bin/activate
+	uv venv --python {{ cookiecutter.python_version }} --seed && .venv/bin/activate
 	uv sync
 	touch .setup_complete
 
