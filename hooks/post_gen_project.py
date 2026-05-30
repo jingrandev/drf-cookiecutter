@@ -4,6 +4,8 @@ import shutil
 import subprocess
 import sys
 
+from feature_registry import cleanup_disabled_features
+
 # Get the absolute path of the current project directory
 PROJECT_DIRECTORY = os.path.realpath(os.path.curdir)
 
@@ -143,7 +145,8 @@ def main():
     # Cleanup non-selected database artifacts
     cleanup_db_artifacts()
 
-    # Generate requirements files
+    cleanup_disabled_features(PROJECT_DIRECTORY)
+
     generate_requirements_files()
 
     # Initialize Git repository
