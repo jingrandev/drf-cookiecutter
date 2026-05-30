@@ -48,6 +48,8 @@ dependencies = [
   "dependency-injector>=4.46",
   "django-simple-history>=3.7",
   "django-mirage-field>=1.4",
+  "pydantic>=2.10",
+  "pydantic-settings>=2.7",
   {%- if cookiecutter.database_engine == 'postgres' %}
   "psycopg[binary]>=3.2.0",
   {%- elif cookiecutter.database_engine == 'mysql' %}
