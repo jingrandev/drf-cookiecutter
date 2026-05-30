@@ -45,11 +45,23 @@ THIRD_PARTY_APPS = [
     "rest_framework_simplejwt",
     "djoser",
     "drf_spectacular",
+    {%- if cookiecutter.use_celery == "yes" %}
+    "django_celery_beat",
+    {%- endif %}
 ]
 LOCAL_APPS = [
     "core.auth",
     "apps.api",
     "libs.logging",
+    {%- if cookiecutter.use_redis == "yes" %}
+    "libs.cache",
+    {%- endif %}
+    {%- if cookiecutter.use_celery == "yes" %}
+    "libs.mq",
+    {%- endif %}
+    {%- if cookiecutter.use_email == "yes" %}
+    "libs.email",
+    {%- endif %}
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -232,3 +244,25 @@ SIMPLE_JWT = {
 # ------------------------------------------------------------------------------
 LOG_DIR = BASE_DIR / "logs"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
+{%- if cookiecutter.use_redis == "yes" %}
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": env("REDIS_URL", default="redis://localhost:6379/0"),
+        "OPTIONS": {
+            "CLIENT_CLASS": "libs.cache.client.EnhancedRedisClient",
+        },
+    }
+}
+{%- endif %}
+{%- if cookiecutter.use_celery == "yes" %}
+
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://localhost:6379/1")
+CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="redis://localhost:6379/2")
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_ENABLE_UTC = True
+{%- endif %}
