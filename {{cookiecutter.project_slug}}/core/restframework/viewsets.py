@@ -5,22 +5,21 @@ from rest_framework.viewsets import GenericViewSet
 
 
 @method_decorator(transaction.non_atomic_requests, name="dispatch")
-class BaseReadOnlyListViewSet(mixins.ListModelMixin, GenericViewSet):
-    """Read-only ViewSet exposing list endpoint only."""
+class BaseReadOnlyGenericViewSet(GenericViewSet):
     pass
 
 
-@method_decorator(transaction.non_atomic_requests, name="dispatch")
-class BaseReadOnlyDetailViewSet(mixins.RetrieveModelMixin, GenericViewSet):
-    """Read-only ViewSet exposing detail endpoint only."""
+class BaseReadOnlyListViewSet(mixins.ListModelMixin, BaseReadOnlyGenericViewSet):
     pass
 
 
-@method_decorator(transaction.non_atomic_requests, name="dispatch")
+class BaseReadOnlyDetailViewSet(mixins.RetrieveModelMixin, BaseReadOnlyGenericViewSet):
+    pass
+
+
 class BaseReadOnlyViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
-    GenericViewSet,
+    BaseReadOnlyGenericViewSet,
 ):
-    """Read-only ViewSet exposing list + detail endpoints."""
     pass

@@ -1,6 +1,8 @@
 from collections.abc import Mapping
+from collections.abc import Sequence
 from contextlib import contextmanager
 from enum import Enum
+from typing import Any
 from typing import TypedDict
 from urllib.parse import urljoin
 
@@ -10,6 +12,7 @@ from requests.adapters import HTTPAdapter
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from requests.exceptions import RequestException
 from requests.exceptions import Timeout
+from urllib3.util.retry import Retry
 
 from .exceptions import ClientConnectionError
 from .exceptions import ClientRequestError
@@ -18,46 +21,39 @@ from .exceptions import ClientTimeoutError
 
 
 class RequestConfig(TypedDict, total=False):
-    """Type hints for request configuration"""
-
     timeout: float
     verify_ssl: bool
     max_retries: int
+    backoff_factor: float
+    status_forcelist: Sequence[int]
+    allowed_methods: Sequence[str]
 
 
 class HTTPMethod(str, Enum):
-    """HTTP methods supported by the client"""
-
     GET = "GET"
     POST = "POST"
     PUT = "PUT"
     DELETE = "DELETE"
+    PATCH = "PATCH"
+    HEAD = "HEAD"
+    OPTIONS = "OPTIONS"
 
     @classmethod
     def values(cls) -> set[str]:
-        """Return a set of all supported HTTP methods"""
         return {method.value for method in cls}
 
 
 class HTTPClient:
-    """HTTP client with improved error handling and configuration options.
-
-    This client provides a robust interface for making HTTP requests with:
-    - Automatic retry handling
-    - Consistent error handling
-    - Configurable timeouts and SSL verification
-    - Session management
-
-    Usage:
-        ```python
-        with HTTPClient('https://api.example.com') as client:
-            response = client.request('GET', '/users')
-        ```
-    """
-
-    DEFAULT_TIMEOUT = 30.0  # seconds
-    DEFAULT_CONFIG = {"timeout": DEFAULT_TIMEOUT, "verify_ssl": True, "max_retries": 3}
-    MIN_TIMEOUT = 1.0  # Minimum allowed timeout in seconds
+    DEFAULT_TIMEOUT = 30.0
+    MIN_TIMEOUT = 1.0
+    DEFAULT_CONFIG = {
+        "timeout": DEFAULT_TIMEOUT,
+        "verify_ssl": True,
+        "max_retries": 3,
+        "backoff_factor": 0.5,
+        "status_forcelist": (429, 500, 502, 503, 504),
+        "allowed_methods": tuple(sorted(HTTPMethod.values())),
+    }
 
     def __init__(
         self,
@@ -65,41 +61,19 @@ class HTTPClient:
         retry: int | None = None,
         config: RequestConfig | None = None,
     ) -> None:
-        """Initialize the HTTP client.
-
-        Args:
-            host: Base URL for all requests
-            retry: Number of retries for failed requests
-            config: Additional configuration options
-
-        Raises:
-            ValueError: If configuration values are invalid
-        """
         if not host:
             error_msg = "Host URL cannot be empty"
             raise ValueError(error_msg)
 
-        self.host = host.rstrip("/")
+        self.host = host
         self.config = self._validate_config({**self.DEFAULT_CONFIG, **(config or {})})
 
         if retry is not None:
             self.config["max_retries"] = max(retry, 0)
 
-        # Create session once during initialization
         self.session = self._create_session()
 
     def _validate_config(self, config: RequestConfig) -> RequestConfig:
-        """Validate configuration values.
-
-        Args:
-            config: Configuration dictionary to validate
-
-        Returns:
-            Validated configuration dictionary
-
-        Raises:
-            ValueError: If any configuration values are invalid
-        """
         if config["timeout"] < self.MIN_TIMEOUT:
             error_msg = f"Timeout must be at least {self.MIN_TIMEOUT} seconds"
             raise ValueError(error_msg)
@@ -109,15 +83,36 @@ class HTTPClient:
         if not isinstance(config["verify_ssl"], bool):
             error_msg = "verify_ssl must be a boolean"
             raise ValueError(error_msg)
+        if config["backoff_factor"] < 0:
+            error_msg = "backoff_factor cannot be negative"
+            raise ValueError(error_msg)
+        status_list = tuple(int(code) for code in config["status_forcelist"])
+        if not status_list:
+            error_msg = "status_forcelist cannot be empty"
+            raise ValueError(error_msg)
+        methods = tuple(method.upper() for method in config["allowed_methods"])
+        if not methods:
+            error_msg = "allowed_methods cannot be empty"
+            raise ValueError(error_msg)
+        config["status_forcelist"] = status_list
+        config["allowed_methods"] = methods
         return config
 
     def _create_session(self) -> requests.Session:
-        """Create and configure a new session with retry handling."""
         session = requests.Session()
-        adapter = HTTPAdapter(max_retries=self.config["max_retries"])
+        adapter = HTTPAdapter(max_retries=self._build_retry())
         session.mount("http://", adapter)
         session.mount("https://", adapter)
         return session
+
+    def _build_retry(self) -> Retry:
+        return Retry(
+            total=self.config["max_retries"],
+            backoff_factor=self.config["backoff_factor"],
+            status_forcelist=self.config["status_forcelist"],
+            allowed_methods=set(self.config["allowed_methods"]),
+            respect_retry_after_header=True,
+        )
 
     def __enter__(self) -> "HTTPClient":
         return self
@@ -126,17 +121,17 @@ class HTTPClient:
         self.close()
 
     def close(self) -> None:
-        """Close the session and free resources."""
-        if hasattr(self, "session"):
-            self.session.close()
+        session = getattr(self, "session", None)
+        if session is None:
+            return
+        session.close()
+        self.session = None
 
     def __del__(self) -> None:
-        """Attempt to clean up if context manager wasn't used."""
         self.close()
 
     @contextmanager
     def _handle_request_errors(self):
-        """Context manager for handling request errors."""
         try:
             yield
         except Timeout as e:
@@ -152,11 +147,12 @@ class HTTPClient:
             resp = getattr(e, "response", None)
             if resp is not None:
                 error_msg = (
-                    f"HTTP {resp.status_code}: {getattr(resp, 'reason', '')}, {getattr(resp, 'text', '')}"
+                    f"HTTP {resp.status_code}: {getattr(resp, 'reason', '')}, "
+                    f"{getattr(resp, 'text', '')}"
                 )
             else:
                 error_msg = str(e)
-            raise ClientResponseError(error_msg) from e
+            raise ClientResponseError(error_msg, response=resp) from e
         except RequestException as e:
             logger.error(f"Request error: {e!s}")
             error_msg = str(e)
@@ -173,29 +169,10 @@ class HTTPClient:
         data: Mapping | None = None,
         json: Mapping | None = None,
         headers: Mapping | None = None,
+        timeout: float | None = None,
+        verify: bool | None = None,
+        extra_kwargs: Mapping[str, Any] | None = None,
     ) -> requests.Response:
-        """
-        Send HTTP request with improved error handling and configuration
-
-        Args:
-            method: HTTP method (GET, POST, PUT, DELETE)
-            url: Request URL path
-            params: URL parameters
-            data: Form data
-            json: JSON data
-            headers: Request headers
-
-        Returns:
-            Response object
-
-        Raises:
-            ClientTimeoutError: Request timeout
-            ClientConnectionError: Connection failed
-            ClientRequestError: Other request errors
-            ClientResponseError: Invalid response
-            ValueError: Invalid method
-        """
-        # Normalize method to HTTPMethod enum
         if isinstance(method, str):
             method = method.upper()
             if method not in HTTPMethod.values():
@@ -206,29 +183,29 @@ class HTTPClient:
             error_msg = "method must be a string or HTTPMethod enum"
             raise TypeError(error_msg)
 
-        # Build full URL with parameters
         full_url = urljoin(self.host, url.lstrip("/"))
 
-        # Prepare request kwargs
-        request_kwargs = {
+        request_kwargs: dict[str, Any] = {
             "headers": headers or {},
-            "timeout": self.config["timeout"],
-            "verify": self.config["verify_ssl"],
+            "timeout": timeout if timeout is not None else self.config["timeout"],
+            "verify": verify if verify is not None else self.config["verify_ssl"],
             "params": params,
         }
+        if extra_kwargs:
+            request_kwargs.update(extra_kwargs)
 
-        # Handle request body
         if data is not None and json is not None:
             error_msg = "cannot provide both data and json"
             raise ValueError(error_msg)
         if data is not None:
-            request_kwargs["data"] = data  # Send as form data
+            request_kwargs["data"] = data
         if json is not None:
-            request_kwargs["json"] = json  # Send as JSON
+            request_kwargs["json"] = json
 
         with self._handle_request_errors():
-            # Use session for the request to benefit from retry configuration
             http_method = method.value if isinstance(method, HTTPMethod) else method
-            response = self.session.request(method=http_method, url=full_url, **request_kwargs)
+            response = self.session.request(
+                method=http_method, url=full_url, **request_kwargs
+            )
             response.raise_for_status()
             return response
