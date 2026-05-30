@@ -1,1 +1,3 @@
-from .user import UserAdmin  # noqa: F401
+from .user import UserAdmin
+
+__all__ = ["UserAdmin"]
