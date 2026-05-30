@@ -1,7 +1,8 @@
 import importlib
 import inspect
 
-from django.apps import AppConfig, apps
+from django.apps import AppConfig
+from django.apps import apps
 from dependency_injector.containers import DeclarativeContainer
 
 
@@ -35,9 +36,9 @@ class DIConfig(AppConfig):
         for app_name, container_list in all_containers.items():
             pkg = importlib.import_module(app_name)
             for container_cls in container_list:
-                container_cls.wire(packages=[pkg])
+                container_cls().wire(packages=[pkg])
 
         for consumer_app, required_containers in requires_map.items():
             consumer_pkg = importlib.import_module(consumer_app)
             for container_cls in required_containers:
-                container_cls.wire(packages=[consumer_pkg])
+                container_cls().wire(packages=[consumer_pkg])
