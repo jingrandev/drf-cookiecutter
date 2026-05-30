@@ -5,6 +5,10 @@ from pathlib import Path
 
 import environ
 from datetime import timedelta
+{%- if cookiecutter.use_celery == "yes" %}
+
+from django_guid.integrations import CeleryIntegration
+{%- endif %}
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -49,6 +53,8 @@ THIRD_PARTY_APPS = [
     "drf_spectacular",
     "mirage",
     "simple_history",
+    "constance",
+    "django_guid",
     {%- if cookiecutter.use_celery == "yes" %}
     "django_celery_beat",
     {%- endif %}
@@ -77,6 +83,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 AUTH_USER_MODEL = "authentication.User"
 
 MIDDLEWARE = [
+    "django_guid.middleware.guid_middleware",
     "django.middleware.security.SecurityMiddleware",
     "core.restframework.middleware.UnifiedAPIExceptionMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -101,6 +108,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "constance.context_processors.config",
             ],
         },
     },
@@ -285,4 +293,50 @@ UNFOLD = {
     "SHOW_HISTORY": True,
     "SHOW_SIDEBAR": True,
     "ENVIRONMENT": "config.settings.base.environment_callback",
+}
+
+# DJANGO GUID
+# ------------------------------------------------------------------------------
+DJANGO_GUID = {
+    "GUID_HEADER_NAME": "Correlation-ID",
+    "VALIDATE_GUID": True,
+    "RETURN_HEADER": True,
+    "EXPOSE_HEADER": True,
+    "INTEGRATIONS": [
+        {%- if cookiecutter.use_celery == "yes" %}
+        CeleryIntegration(use_django_logging=True, log_parent=True),
+        {%- endif %}
+    ],
+    "IGNORE_URLS": ["/health/", "/ready/", "/alive/"],
+    "UUID_LENGTH": 32,
+}
+
+# CONSTANCE
+# ------------------------------------------------------------------------------
+{%- if cookiecutter.use_redis == "yes" %}
+CONSTANCE_BACKEND = "constance.backends.redisd.RedisBackend"
+CONSTANCE_REDIS_CONNECTION = env("REDIS_URL", default="redis://localhost:6379/0")
+CONSTANCE_REDIS_PREFIX = "constance:"
+{%- else %}
+CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
+CONSTANCE_DATABASE_CACHE_BACKEND = None
+{%- endif %}
+CONSTANCE_SUPERUSER_ONLY = False
+
+CONSTANCE_CONFIG = {
+    "SITE_NAME": (
+        "{{ cookiecutter.project_name }}",
+        "Site display name",
+        str,
+    ),
+    "MAINTENANCE_MODE": (
+        False,
+        "Enable maintenance mode (returns 503)",
+        bool,
+    ),
+}
+
+CONSTANCE_CONFIG_FIELDSETS = {
+    "General": ("SITE_NAME",),
+    "System": ("MAINTENANCE_MODE",),
 }

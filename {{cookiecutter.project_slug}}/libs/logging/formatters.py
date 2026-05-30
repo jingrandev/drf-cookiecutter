@@ -8,6 +8,7 @@ class ErrorFormatter:
         # Default log line with process/thread identifiers for diagnostics
         self.default_format = (
             "{time:YYYY-MM-DD HH:mm:ss.SSS} | {elapsed} | {level: <8} | "
+            "[{extra[correlation_id]}] "
             "pid={process.id} tid={thread.id} | "
             "{name}:{function}:{line} - {message}\n"
         )

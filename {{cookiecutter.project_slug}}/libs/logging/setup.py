@@ -8,6 +8,21 @@ from loguru import logger
 from libs.logging.formatters import ErrorFormatter
 from libs.logging.handlers import LoguruHandler
 
+_STDOUT_FORMAT = (
+    "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
+    "<level>{level: <8}</level> | "
+    "[{extra[correlation_id]}] "
+    "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - "
+    "<level>{message}</level>"
+)
+
+_FILE_FORMAT = (
+    "{time:YYYY-MM-DD HH:mm:ss.SSS} | "
+    "{level: <8} | "
+    "[{extra[correlation_id]}] "
+    "{name}:{function}:{line} - {message}"
+)
+
 
 def setup_logging():
     logger.remove()
@@ -29,12 +44,7 @@ def setup_logging():
                 "backtrace": enable_backtrace,
                 "diagnose": enable_diagnose,
                 "filter": lambda r: r["level"].no < logger.level("WARNING").no,
-                "format": (
-                    "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
-                    "<level>{level: <8}</level> | "
-                    "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - "
-                    "<level>{message}</level>"
-                ),
+                "format": _STDOUT_FORMAT,
             },
             {
                 "sink": sys.stderr,
@@ -46,22 +56,19 @@ def setup_logging():
                 "format": ErrorFormatter(),
             },
             {
-                "sink": Path(log_dir) / "app.log",
+                "sink": Path(log_dir) / "info.log",
                 "level": file_log_level,
-                "rotation": "10 MB",
+                "rotation": "00:00",
                 "retention": "1 week",
                 "enqueue": enable_enqueue,
                 "backtrace": enable_backtrace,
                 "diagnose": enable_diagnose,
-                "format": (
-                    "{time:YYYY-MM-DD HH:mm:ss.SSS} | "
-                    "{level: <8} | {name}:{function}:{line} - {message}"
-                ),
+                "format": _FILE_FORMAT,
             },
             {
                 "sink": Path(log_dir) / "error.log",
                 "level": "ERROR",
-                "rotation": "10 MB",
+                "rotation": "00:00",
                 "retention": "1 week",
                 "enqueue": enable_enqueue,
                 "backtrace": True,
@@ -72,21 +79,18 @@ def setup_logging():
             {
                 "sink": Path(log_dir) / "celery.log",
                 "level": file_log_level,
-                "rotation": "10 MB",
+                "rotation": "00:00",
                 "retention": "1 week",
                 "enqueue": enable_enqueue,
                 "backtrace": enable_backtrace,
                 "diagnose": enable_diagnose,
-                "format": (
-                    "{time:YYYY-MM-DD HH:mm:ss.SSS} | "
-                    "{level: <8} | {name}:{function}:{line} - {message}"
-                ),
+                "format": _FILE_FORMAT,
                 "filter": lambda r: r["name"].startswith(("celery", "kombu")),
             },
             {
                 "sink": Path(log_dir) / "celery-error.log",
                 "level": "ERROR",
-                "rotation": "10 MB",
+                "rotation": "00:00",
                 "retention": "1 week",
                 "enqueue": enable_enqueue,
                 "backtrace": True,

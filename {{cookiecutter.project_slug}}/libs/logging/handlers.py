@@ -2,6 +2,7 @@ import inspect
 import logging
 import os
 
+from django_guid import get_guid
 from loguru import logger
 
 _LOGGING_PATHS: set[str] = {os.path.dirname(logging.__file__), os.path.dirname(os.path.abspath(__file__))}
@@ -32,9 +33,13 @@ class LoguruHandler(logging.Handler):
             frame = frame.f_back
             depth += 1
 
-        logger.opt(
-            exception=record.exc_info,
-            depth=depth,
-            colors=True,
-            lazy=True,
-        ).log(level, safe_message(record.getMessage()))
+        (
+            logger.opt(
+                exception=record.exc_info,
+                depth=depth,
+                colors=True,
+                lazy=True,
+            )
+            .bind(correlation_id=get_guid() or "-")
+            .log(level, safe_message(record.getMessage()))
+        )

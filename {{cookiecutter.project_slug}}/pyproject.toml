@@ -51,6 +51,7 @@ dependencies = [
   "pydantic>=2.10",
   "pydantic-settings>=2.7",
   "django-unfold>=0.51",
+  "django-guid>=3.6",
   "gunicorn>=23.0",
   "uvicorn[standard]>=0.34",
   {%- if cookiecutter.database_engine == 'postgres' %}
@@ -60,6 +61,9 @@ dependencies = [
   {%- endif %}
   {%- if cookiecutter.use_redis == "yes" %}
   "django-redis>=6",
+  "django-constance[redis]>=4.0",
+  {%- else %}
+  "django-constance>=4.0",
   {%- endif %}
   {%- if cookiecutter.use_celery == "yes" %}
   "celery>=5.6.2",
