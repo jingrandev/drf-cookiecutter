@@ -51,6 +51,7 @@ THIRD_PARTY_APPS = [
 ]
 LOCAL_APPS = [
     "core.auth",
+    "core.di",
     "apps.api",
     "libs.logging",
     {%- if cookiecutter.use_redis == "yes" %}

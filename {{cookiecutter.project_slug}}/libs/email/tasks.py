@@ -3,12 +3,16 @@ from collections.abc import Sequence
 from typing import Any
 
 from celery import shared_task
+from dependency_injector.wiring import Provide
+from dependency_injector.wiring import inject
 
-from libs.email.services import EmailService
-from libs.email.services import EmailTemplateService
+from .di_containers import EmailContainer
+from .services import EmailService
+from .services import EmailTemplateService
 
 
 @shared_task(name="email.send_email")
+@inject
 def send_email_task(
     *,
     subject: str,
@@ -20,8 +24,8 @@ def send_email_task(
     bcc: Sequence[str] | None = None,
     reply_to: Sequence[str] | None = None,
     headers: Mapping[str, str] | None = None,
+    email_service: EmailService = Provide[EmailContainer.email_service],
 ) -> int:
-    email_service = EmailService()
     return email_service.send_email(
         subject=subject,
         body=body,
@@ -36,6 +40,7 @@ def send_email_task(
 
 
 @shared_task(name="email.send_template_email")
+@inject
 def send_template_email_task(
     *,
     subject: str,
@@ -47,9 +52,10 @@ def send_template_email_task(
     bcc: Sequence[str] | None = None,
     reply_to: Sequence[str] | None = None,
     headers: Mapping[str, str] | None = None,
+    template_service: EmailTemplateService = Provide[
+        EmailContainer.email_template_service
+    ],
 ) -> int:
-    email_service = EmailService()
-    template_service = EmailTemplateService(email_service)
     return template_service.send_template_email(
         subject=subject,
         template_name=template_name,

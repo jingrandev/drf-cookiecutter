@@ -45,6 +45,7 @@ dependencies = [
   "djangorestframework-simplejwt>=5.3.1",
   "django-filter>=25.1.0",
   "stackprinter>=0.2.12",
+  "dependency-injector>=4.46",
   {%- if cookiecutter.database_engine == 'postgres' %}
   "psycopg[binary]>=3.2.0",
   {%- elif cookiecutter.database_engine == 'mysql' %}
