@@ -86,6 +86,9 @@ MIDDLEWARE = [
     "django_guid.middleware.guid_middleware",
     "django.middleware.security.SecurityMiddleware",
     "core.restframework.middleware.UnifiedAPIExceptionMiddleware",
+    {%- if cookiecutter.use_redis == "yes" %}
+    "core.throttling.middleware.ThrottleBlacklistMiddleware",
+    {%- endif %}
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -93,6 +96,9 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
+    {%- if cookiecutter.use_redis == "yes" %}
+    "core.throttling.middleware.ConcurrentRequestsMiddleware",
+    {%- endif %}
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -268,6 +274,13 @@ CACHES = {
         },
     }
 }
+
+# THROTTLING
+# ------------------------------------------------------------------------------
+CONCURRENT_REQUESTS_PER_USER = env.int("CONCURRENT_REQUESTS_PER_USER", default=10)
+CONCURRENT_REQUESTS_TIMEOUT = env.int("CONCURRENT_REQUESTS_TIMEOUT", default=60)
+THROTTLE_BLACKLIST_TTL = env.int("THROTTLE_BLACKLIST_TTL", default=30)
+THROTTLE_IP_ENABLED = env.bool("THROTTLE_IP_ENABLED", default=True)
 {%- endif %}
 {%- if cookiecutter.use_celery == "yes" %}
 
