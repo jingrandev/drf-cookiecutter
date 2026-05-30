@@ -15,12 +15,20 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    {%- if cookiecutter.use_redis == "yes" %}
+      redis:
+        condition: service_healthy
+    {%- endif %}
     environment:
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/{{ cookiecutter.project_slug }}
     {%- elif cookiecutter.database_engine == 'mysql' %}
     depends_on:
       mysql:
         condition: service_healthy
+    {%- if cookiecutter.use_redis == "yes" %}
+      redis:
+        condition: service_healthy
+    {%- endif %}
     environment:
       DATABASE_URL: mysql://app:password@mysql:3306/{{ cookiecutter.project_slug }}?charset=utf8mb4
     {%- endif %}
@@ -53,7 +61,6 @@ services:
       MYSQL_PASSWORD: password
       MYSQL_ROOT_PASSWORD: password
       MYSQL_TCP_PORT: 3306
-    # Use default auth plugin of MySQL 8.4; set charset/collation via client or schema if needed
     ports:
       - "${MYSQL_PORT:-3306}:3306"
     healthcheck:
@@ -61,4 +68,51 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+  {%- endif %}
+
+  {%- if cookiecutter.use_redis == "yes" %}
+  redis:
+    image: docker.io/redis:7-alpine
+    container_name: {{ cookiecutter.project_slug }}_redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  {%- endif %}
+
+  {%- if cookiecutter.use_celery == "yes" %}
+  celery_worker:
+    build:
+      context: .
+      dockerfile: ./compose/local/django/Dockerfile
+    container_name: {{ cookiecutter.project_slug }}_celery_worker
+    volumes:
+      - .:/app:z
+    env_file:
+      - ./.env
+    depends_on:
+      {%- if cookiecutter.use_redis == "yes" %}
+      redis:
+        condition: service_healthy
+      {%- endif %}
+    command: celery -A config worker -l info
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: ./compose/local/django/Dockerfile
+    container_name: {{ cookiecutter.project_slug }}_celery_beat
+    volumes:
+      - .:/app:z
+    env_file:
+      - ./.env
+    depends_on:
+      {%- if cookiecutter.use_redis == "yes" %}
+      redis:
+        condition: service_healthy
+      {%- endif %}
+    command: celery -A config beat -l info
   {%- endif %}
