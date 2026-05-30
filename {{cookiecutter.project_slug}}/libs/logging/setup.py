@@ -5,15 +5,11 @@ from pathlib import Path
 from django.conf import settings
 from loguru import logger
 
-from libs.logging.handlers import LoguruHandler
-from libs.logging.filters import single_level_filter
 from libs.logging.formatters import ErrorFormatter
+from libs.logging.handlers import LoguruHandler
 
 
 def setup_logging():
-    """
-    Configure logging for Django using Loguru.
-    """
     logger.remove()
     log_dir = settings.LOG_DIR
     Path(log_dir).mkdir(parents=True, exist_ok=True)
@@ -24,7 +20,6 @@ def setup_logging():
     enable_backtrace = getattr(settings, "LOG_BACKTRACE", debug)
     enable_diagnose = getattr(settings, "LOG_DIAGNOSE", debug)
 
-    # Configure loguru
     config = {
         "handlers": [
             {
@@ -65,15 +60,41 @@ def setup_logging():
             },
             {
                 "sink": Path(log_dir) / "error.log",
-                "level": "DEBUG",
+                "level": "ERROR",
+                "rotation": "10 MB",
+                "retention": "1 week",
+                "enqueue": enable_enqueue,
+                "backtrace": True,
+                "diagnose": enable_diagnose,
+                "format": ErrorFormatter(),
+            },
+            {%- if cookiecutter.use_celery == "yes" %}
+            {
+                "sink": Path(log_dir) / "celery.log",
+                "level": file_log_level,
                 "rotation": "10 MB",
                 "retention": "1 week",
                 "enqueue": enable_enqueue,
                 "backtrace": enable_backtrace,
                 "diagnose": enable_diagnose,
-                "format": ErrorFormatter(),
-                "filter": lambda record: single_level_filter(record, "ERROR"),
+                "format": (
+                    "{time:YYYY-MM-DD HH:mm:ss.SSS} | "
+                    "{level: <8} | {name}:{function}:{line} - {message}"
+                ),
+                "filter": lambda r: r["name"].startswith(("celery", "kombu")),
             },
+            {
+                "sink": Path(log_dir) / "celery-error.log",
+                "level": "ERROR",
+                "rotation": "10 MB",
+                "retention": "1 week",
+                "enqueue": enable_enqueue,
+                "backtrace": True,
+                "diagnose": enable_diagnose,
+                "format": ErrorFormatter(),
+                "filter": lambda r: r["name"].startswith(("celery", "kombu")),
+            },
+            {%- endif %}
         ],
     }
 

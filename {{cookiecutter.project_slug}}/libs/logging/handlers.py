@@ -1,11 +1,19 @@
 import inspect
 import logging
+import os
 
 from loguru import logger
 
+_LOGGING_PATHS: set[str] = {os.path.dirname(logging.__file__), os.path.dirname(os.path.abspath(__file__))}
+
 
 def safe_message(message):
-    return message.replace("<", r"\<").replace(">", r"\>")
+    return (
+        message.replace("<", r"\<")
+        .replace(">", r"\>")
+        .replace("{", r"\{")
+        .replace("}", r"\}")
+    )
 
 
 class LoguruHandler(logging.Handler):
@@ -17,7 +25,10 @@ class LoguruHandler(logging.Handler):
             level = record.levelno
 
         frame, depth = inspect.currentframe(), 0
-        while frame and (depth == 0 or frame.f_code.co_filename == logging.__file__):
+        while frame:
+            filename = frame.f_code.co_filename
+            if depth > 0 and not any(filename.startswith(p) for p in _LOGGING_PATHS):
+                break
             frame = frame.f_back
             depth += 1
 

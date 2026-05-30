@@ -249,7 +249,6 @@ SIMPLE_JWT = {
 # LOGGING
 # ------------------------------------------------------------------------------
 LOG_DIR = BASE_DIR / "logs"
-LOG_DIR.mkdir(parents=True, exist_ok=True)
 {%- if cookiecutter.use_redis == "yes" %}
 
 CACHES = {
