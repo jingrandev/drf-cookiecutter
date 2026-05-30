@@ -15,7 +15,7 @@ require: ## Check that prerequisites are installed.
 init: require .setup_complete ## Set up the local development environment
 
 .setup_complete: ## Internal helper to run the setup
-	uv venv --python {{ cookiecutter.python_version }} --seed && .venv/bin/activate
+	uv venv --python {{ cookiecutter.python_version }} --seed && . .venv/bin/activate
 	uv sync
 	touch .setup_complete
 
