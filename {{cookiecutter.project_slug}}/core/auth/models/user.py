@@ -49,7 +49,8 @@ class User(AbstractUser):
     Default custom user model for {{ cookiecutter.project_name }}.
     """
 
-    # First and last name do not cover name patterns around the globe
+    first_name = None  # type: ignore[assignment]
+    last_name = None  # type: ignore[assignment]
     name = CharField(_("Name of User"), blank=True, max_length=255)
     {%- if cookiecutter.username_type == "email" %}
     email = EmailField(_("email address"), unique=True)
