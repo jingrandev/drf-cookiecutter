@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 def main() -> int:
-    repo_root = Path(__file__).resolve().parents[1]
+    repo_root = Path(__file__).resolve().parents[3]
     errors: list[str] = []
 
     container_classes, wired_packages = _scan_containers(repo_root)

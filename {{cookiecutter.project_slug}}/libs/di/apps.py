@@ -6,7 +6,7 @@ from dependency_injector.containers import DeclarativeContainer
 
 
 class DIConfig(AppConfig):
-    name = "core.di"
+    name = "libs.di"
 
     def ready(self) -> None:
         all_containers: dict[str, list[type[DeclarativeContainer]]] = {}

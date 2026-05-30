@@ -7,6 +7,12 @@ default_language_version:
 repos:
   - repo: local
     hooks:
+      - id: check-di-inject
+        name: Validate DI inject/Provide usage
+        entry: python libs/di/hooks/check_di_inject.py
+        language: system
+        pass_filenames: false
+        always_run: true
       - id: pytest-cov
         name: Run tests with coverage
         entry: make cov
