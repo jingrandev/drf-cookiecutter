@@ -46,6 +46,8 @@ dependencies = [
   "django-filter>=25.1.0",
   "stackprinter>=0.2.12",
   "dependency-injector>=4.46",
+  "django-simple-history>=3.7",
+  "django-mirage-field>=1.4",
   {%- if cookiecutter.database_engine == 'postgres' %}
   "psycopg[binary]>=3.2.0",
   {%- elif cookiecutter.database_engine == 'mysql' %}

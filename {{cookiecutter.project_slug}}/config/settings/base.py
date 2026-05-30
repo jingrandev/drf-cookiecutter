@@ -45,6 +45,8 @@ THIRD_PARTY_APPS = [
     "rest_framework_simplejwt",
     "djoser",
     "drf_spectacular",
+    "mirage",
+    "simple_history",
     {%- if cookiecutter.use_celery == "yes" %}
     "django_celery_beat",
     {%- endif %}
@@ -81,6 +83,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "simple_history.middleware.HistoryRequestMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
