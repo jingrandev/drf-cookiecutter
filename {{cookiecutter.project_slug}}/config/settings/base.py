@@ -248,7 +248,7 @@ LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 CACHES = {
     "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
+        "BACKEND": "libs.cache.backend.EnhancedRedisCache",
         "LOCATION": env("REDIS_URL", default="redis://localhost:6379/0"),
         "OPTIONS": {
             "CLIENT_CLASS": "libs.cache.client.EnhancedRedisClient",

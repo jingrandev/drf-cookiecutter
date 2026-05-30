@@ -19,6 +19,13 @@ FEATURE_REGISTRY = {
     },
 }
 
+CONDITIONAL_FILES = {
+    "tasks.py": {
+        "file": "libs/email/tasks.py",
+        "requires": {"celery": "yes", "email": "yes"},
+    },
+}
+
 FEATURE_FLAGS = {
     "redis": "{{ cookiecutter.use_redis }}",
     "celery": "{{ cookiecutter.use_celery }}",
@@ -46,6 +53,17 @@ def cleanup_disabled_features(project_directory):
             if os.path.exists(path):
                 os.remove(path)
                 print(f"Removed file: {path}")
+
+    for entry in CONDITIONAL_FILES.values():
+        requirements = entry["requires"]
+        for req_feature, req_value in requirements.items():
+            flag = FEATURE_FLAGS.get(req_feature, "no")
+            if flag != req_value:
+                path = os.path.join(project_directory, entry["file"])
+                if os.path.exists(path):
+                    os.remove(path)
+                    print(f"Removed conditional file: {path}")
+                break
 
 
 def run_command(command, cwd=None):

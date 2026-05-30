@@ -243,3 +243,20 @@ def test_enabled_features_dirs_exist(cookies, context, context_override):
                 assert (
                     result.project_path / d
                 ).is_dir(), f"Feature '{feature_name}' enabled but dir '{d}' does not exist"
+
+
+@pytest.mark.parametrize("context_override", FEATURE_COMBINATIONS, ids=_feature_combo_id)
+def test_email_tasks_conditional(cookies, context, context_override):
+    """tasks.py only exists when both use_email=yes and use_celery=yes."""
+    result = cookies.bake(extra_context={**context, **context_override})
+    assert result.exit_code == 0
+    assert result.exception is None
+
+    tasks_path = result.project_path / "libs" / "email" / "tasks.py"
+    email_on = context_override.get("use_email", "no") == "yes"
+    celery_on = context_override.get("use_celery", "no") == "yes"
+
+    if email_on and celery_on:
+        assert tasks_path.exists(), "tasks.py should exist when both email and celery are enabled"
+    elif email_on:
+        assert not tasks_path.exists(), "tasks.py should not exist when email is on but celery is off"
