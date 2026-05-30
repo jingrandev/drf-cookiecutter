@@ -41,6 +41,7 @@ DJANGO_APPS = [
     "django.contrib.staticfiles",
 ]
 THIRD_PARTY_APPS = [
+    "libs.extensions",
     "django_extensions",
     "rest_framework",
     "rest_framework_simplejwt",
