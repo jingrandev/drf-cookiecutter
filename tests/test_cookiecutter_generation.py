@@ -30,9 +30,12 @@ def context():
         "author_name": "Test Author",
         "email": "test@example.com",
         "version": "0.1.0",
-        "python_version": "3.11",
+        "python_version": "3.12",
         "username_type": "username",
         "open_source_license": "MIT",
+        "use_redis": "no",
+        "use_celery": "no",
+        "use_email": "no",
     }
 
 
@@ -44,9 +47,14 @@ SUPPORTED_COMBINATIONS = [
     {"open_source_license": "GPLv3"},
     {"open_source_license": "Apache Software License 2.0"},
     {"open_source_license": "Not open source"},
-    {"python_version": "3.11"},
     {"python_version": "3.12"},
     {"python_version": "3.13"},
+    {"python_version": "3.14"},
+    {"use_redis": "yes"},
+    {"use_celery": "yes"},
+    {"use_email": "yes"},
+    {"use_redis": "yes", "use_celery": "yes"},
+    {"use_redis": "yes", "use_celery": "yes", "use_email": "yes"},
 ]
 
 
@@ -140,3 +148,98 @@ def test_trim_email(cookies, context):
     # If we get here, we couldn't find the email in any of the expected files
     # This is still a pass as we're just testing that spaces are trimmed if the email is used
     pass
+
+
+FEATURE_DIR_MAP = {
+    "redis": ["libs/cache"],
+    "celery": ["libs/mq"],
+    "email": ["libs/email"],
+}
+
+FEATURE_STRING_MARKERS = {
+    "redis": ["django-redis", "REDIS_URL", "libs.cache"],
+    "celery": [
+        "CELERY_BROKER_URL",
+        "CELERY_RESULT_BACKEND",
+        "libs.mq",
+        "django_celery_beat",
+        "celery_worker",
+        "celery_beat",
+    ],
+    "email": ["libs.email"],
+}
+
+FEATURE_COMBINATIONS = [
+    {"use_redis": "no", "use_celery": "no", "use_email": "no"},
+    {"use_redis": "yes", "use_celery": "no", "use_email": "no"},
+    {"use_redis": "no", "use_celery": "yes", "use_email": "no"},
+    {"use_redis": "no", "use_celery": "no", "use_email": "yes"},
+    {"use_redis": "yes", "use_celery": "yes", "use_email": "no"},
+    {"use_redis": "yes", "use_celery": "no", "use_email": "yes"},
+    {"use_redis": "no", "use_celery": "yes", "use_email": "yes"},
+    {"use_redis": "yes", "use_celery": "yes", "use_email": "yes"},
+]
+
+
+def _feature_combo_id(ctx):
+    return "-".join(f"{k}:{v}" for k, v in sorted(ctx.items()))
+
+
+@pytest.mark.parametrize("context_override", FEATURE_COMBINATIONS, ids=_feature_combo_id)
+def test_disabled_features_no_dirs(cookies, context, context_override):
+    """When a feature is disabled, its directories must not exist."""
+    result = cookies.bake(extra_context={**context, **context_override})
+    assert result.exit_code == 0
+    assert result.exception is None
+
+    for feature_name, dirs in FEATURE_DIR_MAP.items():
+        flag_key = f"use_{feature_name}"
+        is_enabled = context_override.get(flag_key, "no") == "yes"
+
+        if not is_enabled:
+            for d in dirs:
+                assert not (
+                    result.project_path / d
+                ).exists(), f"Feature '{feature_name}' disabled but dir '{d}' exists"
+
+
+@pytest.mark.parametrize("context_override", FEATURE_COMBINATIONS, ids=_feature_combo_id)
+def test_disabled_features_no_string_markers(cookies, context, context_override):
+    """When a feature is disabled, its string markers must not appear in any file."""
+    result = cookies.bake(extra_context={**context, **context_override})
+    assert result.exit_code == 0
+    assert result.exception is None
+
+    for feature_name, markers in FEATURE_STRING_MARKERS.items():
+        flag_key = f"use_{feature_name}"
+        is_enabled = context_override.get(flag_key, "no") == "yes"
+
+        if not is_enabled:
+            paths = build_files_list(str(result.project_path))
+            for path in paths:
+                if is_binary(path):
+                    continue
+                with open(path, encoding="utf-8") as f:
+                    content = f.read()
+                for marker in markers:
+                    assert (
+                        marker not in content
+                    ), f"Feature '{feature_name}' disabled but marker '{marker}' found in {path}"
+
+
+@pytest.mark.parametrize("context_override", FEATURE_COMBINATIONS, ids=_feature_combo_id)
+def test_enabled_features_dirs_exist(cookies, context, context_override):
+    """When a feature is enabled, its directories must exist."""
+    result = cookies.bake(extra_context={**context, **context_override})
+    assert result.exit_code == 0
+    assert result.exception is None
+
+    for feature_name, dirs in FEATURE_DIR_MAP.items():
+        flag_key = f"use_{feature_name}"
+        is_enabled = context_override.get(flag_key, "no") == "yes"
+
+        if is_enabled:
+            for d in dirs:
+                assert (
+                    result.project_path / d
+                ).is_dir(), f"Feature '{feature_name}' enabled but dir '{d}' does not exist"
