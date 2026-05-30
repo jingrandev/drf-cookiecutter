@@ -32,6 +32,7 @@ ALLOWED_HOSTS = []
 # APPS
 # ------------------------------------------------------------------------------
 DJANGO_APPS = [
+    "unfold",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -270,3 +271,18 @@ CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_ENABLE_UTC = True
 {%- endif %}
+
+
+def environment_callback(request):
+    from django.conf import settings
+
+    if settings.DEBUG:
+        return ["Development", "warning"]
+    return ["Production", "success"]
+
+
+UNFOLD = {
+    "SHOW_HISTORY": True,
+    "SHOW_SIDEBAR": True,
+    "ENVIRONMENT": "config.settings.base.environment_callback",
+}
