@@ -14,5 +14,8 @@
     "Not open source"
   ],
   "python_version": ["3.12", "3.13", "3.14"],
-  "database_engine": ["postgres", "mysql"]
+  "database_engine": ["postgres", "mysql"],
+  "use_redis": ["no", "yes"],
+  "use_celery": ["no", "yes"],
+  "use_email": ["no", "yes"]
 }
