@@ -115,4 +115,22 @@ services:
         condition: service_healthy
       {%- endif %}
     command: celery -A config beat -l info
+
+  flower:
+    build:
+      context: .
+      dockerfile: ./compose/local/django/Dockerfile
+    container_name: {{ cookiecutter.project_slug }}_flower
+    volumes:
+      - .:/app:z
+    env_file:
+      - ./.env
+    ports:
+      - "${FLOWER_PORT:-5555}:5555"
+    {%- if cookiecutter.use_redis == "yes" %}
+    depends_on:
+      redis:
+        condition: service_healthy
+    {%- endif %}
+    command: /start-flower
   {%- endif %}

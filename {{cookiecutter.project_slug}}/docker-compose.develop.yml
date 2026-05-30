@@ -104,4 +104,16 @@ services:
         condition: service_healthy
     {%- endif %}
     command: /start-celerybeat
+
+  flower:
+    <<: *app
+    container_name: {{ cookiecutter.project_slug }}_flower_develop
+    ports:
+      - "${FLOWER_PORT:-5555}:5555"
+    {%- if cookiecutter.use_redis == "yes" %}
+    depends_on:
+      redis:
+        condition: service_healthy
+    {%- endif %}
+    command: /start-flower
   {%- endif %}

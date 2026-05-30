@@ -5,6 +5,7 @@ FROM docker.io/python:{{ cookiecutter.python_version }}-slim-bookworm AS python
 FROM python AS python-build-stage
 
 ARG BUILD_ENVIRONMENT=local
+ARG PIP_PACKAGES=""
 
 # Install apt packages
 RUN apt-get update && apt-get install --no-install-recommends -y \
@@ -26,6 +27,8 @@ COPY ./requirements/ ./requirements/
 # Install Python deps
 RUN pip install --no-cache-dir -r requirements/base.txt
 RUN pip install --no-cache-dir -r requirements/develop.txt
+
+RUN if [ -n "$PIP_PACKAGES" ]; then pip install --no-cache-dir ${PIP_PACKAGES}; fi
 
 # Python 'run' stage
 FROM python AS python-run-stage
@@ -52,13 +55,29 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   gettext \
   # wait-for-it
   wait-for-it \
+  less \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
 
-# All absolute dir copies ignore workdir instruction. All relative dir copies are wrt to the workdir instruction
-# copy python dependency wheels from python-build-stage
+# copy python dependency wheels and binaries from python-build-stage
 COPY --from=python-build-stage /usr/local/lib/python{{ cookiecutter.python_version }}/site-packages /usr/local/lib/python{{ cookiecutter.python_version }}/site-packages
+COPY --from=python-build-stage /usr/local/bin /usr/local/bin
+
+RUN printf '%s\n' \
+  '#!/usr/bin/env bash' \
+  'exec python manage.py shell "$@"' \
+  > /usr/local/bin/pmsh \
+  && printf '%s\n' \
+  '#!/usr/bin/env bash' \
+  'exec python manage.py runscript "$@"' \
+  > /usr/local/bin/pms \
+  && chmod +x /usr/local/bin/pmsh /usr/local/bin/pms \
+  && printf '%s\n' \
+  "alias pmsh='python manage.py shell'" \
+  "alias pms='python manage.py runscript'" \
+  > /etc/profile.d/django-aliases.sh \
+  && cat /etc/profile.d/django-aliases.sh >> /root/.bashrc
 
 # Copy application code to WORKDIR
 COPY . ${APP_HOME}
@@ -80,6 +99,10 @@ RUN chmod +x /start-celeryworker
 COPY ./compose/local/django/celery/beat/start /start-celerybeat
 RUN sed -i 's/\r$//g' /start-celerybeat
 RUN chmod +x /start-celerybeat
+
+COPY ./compose/local/django/celery/flower/start /start-flower
+RUN sed -i 's/\r$//g' /start-flower
+RUN chmod +x /start-flower
 {%- endif %}
 
 ENTRYPOINT ["/entrypoint"]
