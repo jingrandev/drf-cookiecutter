@@ -52,3 +52,17 @@ SILKY_PYTHON_PROFILER_RESULT_PATH.mkdir(parents=True, exist_ok=True)
 
 # API Documentation
 SHOW_API_DOCS = True
+
+# LOGGING
+# ------------------------------------------------------------------------------
+# Print Django ORM raw SQL queries to loguru via the stdlib bridge.
+# Only active in local development — SQL query volume is too high for production.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "loggers": {
+        "django.db.backends": {
+            "level": "DEBUG",
+        },
+    },
+}

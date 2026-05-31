@@ -8,18 +8,18 @@ from loguru import logger
 from libs.logging.formatters import ErrorFormatter
 from libs.logging.handlers import LoguruHandler
 
-_STDOUT_FORMAT = (
+STDOUT_FORMAT = (
     "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
     "<level>{level: <8}</level> | "
-    "[{extra[correlation_id]}] "
+    "[{extra[correlation_id]}] [{process.id}] "
     "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - "
     "<level>{message}</level>"
 )
 
-_FILE_FORMAT = (
+FILE_FORMAT = (
     "{time:YYYY-MM-DD HH:mm:ss.SSS} | "
     "{level: <8} | "
-    "[{extra[correlation_id]}] "
+    "[{extra[correlation_id]}] [{process.id}] "
     "{name}:{function}:{line} - {message}"
 )
 
@@ -44,7 +44,7 @@ def setup_logging():
                 "backtrace": enable_backtrace,
                 "diagnose": enable_diagnose,
                 "filter": lambda r: r["level"].no < logger.level("WARNING").no,
-                "format": _STDOUT_FORMAT,
+                "format": STDOUT_FORMAT,
             },
             {
                 "sink": sys.stderr,
@@ -63,7 +63,7 @@ def setup_logging():
                 "enqueue": enable_enqueue,
                 "backtrace": enable_backtrace,
                 "diagnose": enable_diagnose,
-                "format": _FILE_FORMAT,
+                "format": FILE_FORMAT,
             },
             {
                 "sink": Path(log_dir) / "error.log",
@@ -84,7 +84,7 @@ def setup_logging():
                 "enqueue": enable_enqueue,
                 "backtrace": enable_backtrace,
                 "diagnose": enable_diagnose,
-                "format": _FILE_FORMAT,
+                "format": FILE_FORMAT,
                 "filter": lambda r: r["name"].startswith(("celery", "kombu")),
             },
             {

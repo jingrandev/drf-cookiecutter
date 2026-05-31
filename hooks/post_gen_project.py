@@ -28,6 +28,10 @@ CONDITIONAL_FILES = {
         "file": "libs/email/tasks.py",
         "requires": {"celery": "yes", "email": "yes"},
     },
+    "celery_signals.py": {
+        "file": "libs/logging/celery_signals.py",
+        "requires": {"celery": "yes"},
+    },
 }
 
 FEATURE_FLAGS = {

@@ -1,20 +1,35 @@
 import inspect
 import logging
 import os
+from threading import local
 
 from django_guid import get_guid
 from loguru import logger
 
-_LOGGING_PATHS: set[str] = {os.path.dirname(logging.__file__), os.path.dirname(os.path.abspath(__file__))}
+LOGGING_PATHS: set[str] = {
+    os.path.dirname(logging.__file__),
+    os.path.dirname(os.path.abspath(__file__)),
+}
+
+correlation_override = local()
 
 
-def safe_message(message):
-    return (
-        message.replace("<", r"\<")
-        .replace(">", r"\>")
-        .replace("{", r"\{")
-        .replace("}", r"\}")
-    )
+def set_correlation_id(correlation_id: str):
+    correlation_override.correlation_id = correlation_id
+
+
+def clear_correlation_id():
+    try:
+        del correlation_override.correlation_id
+    except AttributeError:
+        pass
+
+
+def get_correlation_id():
+    override = getattr(correlation_override, "correlation_id", None)
+    if override:
+        return override
+    return get_guid() or "-"
 
 
 class LoguruHandler(logging.Handler):
@@ -28,10 +43,21 @@ class LoguruHandler(logging.Handler):
         frame, depth = inspect.currentframe(), 0
         while frame:
             filename = frame.f_code.co_filename
-            if depth > 0 and not any(filename.startswith(p) for p in _LOGGING_PATHS):
+            if depth > 0 and not any(filename.startswith(p) for p in LOGGING_PATHS):
                 break
             frame = frame.f_back
             depth += 1
+
+        message = record.getMessage()
+        if "<" in message or ">" in message or "{" in message or "}" in message:
+            message = (
+                message.replace("<", r"\<")
+                .replace(">", r"\>")
+                .replace("{", r"\{")
+                .replace("}", r"\}")
+            )
+
+        correlation_id = get_correlation_id()
 
         (
             logger.opt(
@@ -40,6 +66,6 @@ class LoguruHandler(logging.Handler):
                 colors=True,
                 lazy=True,
             )
-            .bind(correlation_id=get_guid() or "-")
-            .log(level, safe_message(record.getMessage()))
+            .bind(correlation_id=correlation_id)
+            .log(level, message)
         )
