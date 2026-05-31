@@ -90,7 +90,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "core.restframework.middleware.UnifiedAPIExceptionMiddleware",
     {%- if cookiecutter.use_redis == "yes" %}
-    "core.throttling.middleware.ThrottleBlacklistMiddleware",
+    "libs.throttling.middleware.ThrottleBlacklistMiddleware",
     {%- endif %}
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -100,7 +100,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
     {%- if cookiecutter.use_redis == "yes" %}
-    "core.throttling.middleware.ConcurrentRequestsMiddleware",
+    "libs.throttling.middleware.ConcurrentRequestsMiddleware",
     {%- endif %}
 ]
 

@@ -3,9 +3,9 @@ from django.core.cache import cache
 from loguru import logger
 from rest_framework.throttling import SimpleRateThrottle
 
-from core.throttling.blacklist import blacklist_ip, blacklist_token
-from core.throttling.errors import ConcurrencyLimitExceeded
-from core.throttling.utils import get_auth_token, get_client_ip
+from libs.throttling.blacklist import blacklist_ip, blacklist_token
+from libs.throttling.errors import ConcurrencyLimitExceeded
+from libs.throttling.utils import get_auth_token, get_client_ip
 
 _REQUEST_ATTR_KEY = "_concurrency_throttle_cache_key"
 

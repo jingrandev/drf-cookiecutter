@@ -1,9 +1,9 @@
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse, JsonResponse
 
-from core.throttling.blacklist import get_token_cooldown, is_ip_blacklisted
-from core.throttling.concurrency import ConcurrentUserRequestsThrottle
-from core.throttling.utils import get_auth_token, get_client_ip
+from libs.throttling.blacklist import get_token_cooldown, is_ip_blacklisted
+from libs.throttling.concurrency import ConcurrentUserRequestsThrottle
+from libs.throttling.utils import get_auth_token, get_client_ip
 
 
 class ThrottleBlacklistMiddleware:
