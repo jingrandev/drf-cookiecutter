@@ -17,6 +17,10 @@ FEATURE_REGISTRY = {
         "dirs": ["libs/email"],
         "files": [],
     },
+    "action_audit": {
+        "dirs": ["core/audit"],
+        "files": [],
+    },
 }
 
 CONDITIONAL_FILES = {
@@ -30,6 +34,7 @@ FEATURE_FLAGS = {
     "redis": "{{ cookiecutter.use_redis }}",
     "celery": "{{ cookiecutter.use_celery }}",
     "email": "{{ cookiecutter.use_email }}",
+    "action_audit": "{{ cookiecutter.use_action_audit }}",
 }
 
 # Get the absolute path of the current project directory

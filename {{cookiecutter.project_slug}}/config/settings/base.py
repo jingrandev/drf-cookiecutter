@@ -73,6 +73,9 @@ LOCAL_APPS = [
     {%- if cookiecutter.use_email == "yes" %}
     "libs.email",
     {%- endif %}
+    {%- if cookiecutter.use_action_audit == "yes" %}
+    "core.audit",
+    {%- endif %}
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -281,6 +284,12 @@ CONCURRENT_REQUESTS_PER_USER = env.int("CONCURRENT_REQUESTS_PER_USER", default=1
 CONCURRENT_REQUESTS_TIMEOUT = env.int("CONCURRENT_REQUESTS_TIMEOUT", default=60)
 THROTTLE_BLACKLIST_TTL = env.int("THROTTLE_BLACKLIST_TTL", default=30)
 THROTTLE_IP_ENABLED = env.bool("THROTTLE_IP_ENABLED", default=True)
+{%- endif %}
+{%- if cookiecutter.use_action_audit == "yes" %}
+
+# AUDIT
+# ------------------------------------------------------------------------------
+ACTION_RETENTION_DAYS = env.int("ACTION_RETENTION_DAYS", default=90)
 {%- endif %}
 {%- if cookiecutter.use_celery == "yes" %}
 

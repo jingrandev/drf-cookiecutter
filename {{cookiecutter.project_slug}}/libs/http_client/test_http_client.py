@@ -10,10 +10,10 @@ from requests.exceptions import Timeout
 
 from libs.http_client import HTTPClient
 from libs.http_client import HTTPMethod
-from libs.http_client.exceptions import ClientConnectionError
-from libs.http_client.exceptions import ClientRequestError
-from libs.http_client.exceptions import ClientResponseError
-from libs.http_client.exceptions import ClientTimeoutError
+from libs.http_client.errors import ClientConnectionError
+from libs.http_client.errors import ClientRequestError
+from libs.http_client.errors import ClientResponseError
+from libs.http_client.errors import ClientTimeoutError
 
 
 class HTTPClientTest(TestCase):

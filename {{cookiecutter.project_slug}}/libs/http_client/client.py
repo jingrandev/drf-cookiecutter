@@ -14,10 +14,10 @@ from requests.exceptions import RequestException
 from requests.exceptions import Timeout
 from urllib3.util.retry import Retry
 
-from .exceptions import ClientConnectionError
-from .exceptions import ClientRequestError
-from .exceptions import ClientResponseError
-from .exceptions import ClientTimeoutError
+from .errors import ClientConnectionError
+from .errors import ClientRequestError
+from .errors import ClientResponseError
+from .errors import ClientTimeoutError
 
 
 class RequestConfig(TypedDict, total=False):
