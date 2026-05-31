@@ -73,8 +73,8 @@ LOCAL_APPS = [
     {%- if cookiecutter.use_email == "yes" %}
     "libs.email",
     {%- endif %}
-    {%- if cookiecutter.use_action_audit == "yes" %}
-    "core.audit",
+    {%- if cookiecutter.use_command == "yes" %}
+    "core.command",
     {%- endif %}
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -285,11 +285,11 @@ CONCURRENT_REQUESTS_TIMEOUT = env.int("CONCURRENT_REQUESTS_TIMEOUT", default=60)
 THROTTLE_BLACKLIST_TTL = env.int("THROTTLE_BLACKLIST_TTL", default=30)
 THROTTLE_IP_ENABLED = env.bool("THROTTLE_IP_ENABLED", default=True)
 {%- endif %}
-{%- if cookiecutter.use_action_audit == "yes" %}
+{%- if cookiecutter.use_command == "yes" %}
 
-# AUDIT
+# COMMAND
 # ------------------------------------------------------------------------------
-ACTION_RETENTION_DAYS = env.int("ACTION_RETENTION_DAYS", default=90)
+COMMAND_RETENTION_DAYS = env.int("COMMAND_RETENTION_DAYS", default=90)
 {%- endif %}
 {%- if cookiecutter.use_celery == "yes" %}
 

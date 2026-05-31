@@ -18,5 +18,5 @@
   "use_redis": ["no", "yes"],
   "use_celery": ["no", "yes"],
   "use_email": ["no", "yes"],
-  "use_action_audit": ["no", "yes"]
+  "use_command": ["no", "yes"]
 }

@@ -17,8 +17,8 @@ FEATURE_REGISTRY = {
         "dirs": ["libs/email"],
         "files": [],
     },
-    "action_audit": {
-        "dirs": ["core/audit"],
+    "command": {
+        "dirs": ["core/command"],
         "files": [],
     },
 }
@@ -34,7 +34,7 @@ FEATURE_FLAGS = {
     "redis": "{{ cookiecutter.use_redis }}",
     "celery": "{{ cookiecutter.use_celery }}",
     "email": "{{ cookiecutter.use_email }}",
-    "action_audit": "{{ cookiecutter.use_action_audit }}",
+    "command": "{{ cookiecutter.use_command }}",
 }
 
 # Get the absolute path of the current project directory
