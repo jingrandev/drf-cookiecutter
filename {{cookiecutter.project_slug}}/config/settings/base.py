@@ -51,7 +51,7 @@ THIRD_PARTY_APPS = [
     "rest_framework_simplejwt",
     "djoser",
     "drf_spectacular",
-    "mirage",
+    "encrypted_model_fields",
     "simple_history",
     "constance",
     "django_guid",
