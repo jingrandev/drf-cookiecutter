@@ -1,3 +1,5 @@
+import json
+
 from django.contrib import admin
 from unfold.admin import ModelAdmin
 
@@ -14,8 +16,6 @@ class ActionAdmin(ModelAdmin):
 
     def params_pretty(self, obj):
         if obj.params:
-            import json
-
             return json.dumps(obj.params, indent=2, ensure_ascii=False)
         return "-"
 

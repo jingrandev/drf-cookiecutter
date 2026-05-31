@@ -7,8 +7,7 @@ logger = logging.getLogger(__name__)
 action_done = Signal()
 
 
-def log_action_done(sender, *, user, params, scope, **kwargs):
-    action = kwargs.get("action")
+def log_action_done(sender, *, user, params, scope, action=None, **kwargs):
     action_type = kwargs.get("action_type", sender)
     logger.info(
         "Action done: type=%s user=%s scope=%s%s",

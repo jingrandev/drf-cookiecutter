@@ -46,7 +46,7 @@ class ScopedTestAction(UndoableActionType):
         return {"item_id": kwargs.get("item_id")}
 
     @classmethod
-    def scope(cls, *args, **kwargs):
+    def scope(cls, user, *args, **kwargs):
         return ScopeBuilder.object("item", kwargs.get("item_id", 0))
 
     @classmethod
@@ -122,6 +122,10 @@ class TestActionType(TestCase):
         ScopedTestAction.do(user=None, item_id=99)
         action = Action.objects.first()
         self.assertEqual(action.scope, "item:99")
+
+    def test_cannot_instantiate_action_type(self):
+        with self.assertRaises(TypeError):
+            SimpleActionType()
 
 
 class TestActionHandler(TestCase):

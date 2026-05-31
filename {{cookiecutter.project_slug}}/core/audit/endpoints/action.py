@@ -8,7 +8,7 @@ from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from core.audit.models import Action
 from core.audit.serializers import ActionSerializer
-from core.audit.serializers.action import UndoRedoSerializer
+from core.audit.serializers.action import UndoRedoRequestSerializer
 from core.audit.services.handler import ActionHandler
 from core.restframework.viewsets import BaseReadOnlyGenericViewSet
 
@@ -27,12 +27,12 @@ class ActionViewSet(ReadOnlyModelViewSet, BaseReadOnlyGenericViewSet):
 
     @extend_schema(
         operation_id="audit_undo",
-        request=UndoRedoSerializer,
+        request=UndoRedoRequestSerializer,
         responses={status.HTTP_200_OK: ActionSerializer},
     )
     @action(detail=False, methods=["post"], url_path="undo", permission_classes=[IsAuthenticated])
     def undo(self, request):
-        serializer = UndoRedoSerializer(data=request.data)
+        serializer = UndoRedoRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         action = ActionHandler.undo(
             user=request.user,
@@ -42,12 +42,12 @@ class ActionViewSet(ReadOnlyModelViewSet, BaseReadOnlyGenericViewSet):
 
     @extend_schema(
         operation_id="audit_redo",
-        request=UndoRedoSerializer,
+        request=UndoRedoRequestSerializer,
         responses={status.HTTP_200_OK: ActionSerializer},
     )
     @action(detail=False, methods=["post"], url_path="redo", permission_classes=[IsAuthenticated])
     def redo(self, request):
-        serializer = UndoRedoSerializer(data=request.data)
+        serializer = UndoRedoRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         action = ActionHandler.redo(
             user=request.user,

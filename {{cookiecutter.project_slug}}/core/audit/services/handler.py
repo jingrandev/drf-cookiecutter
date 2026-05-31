@@ -11,18 +11,18 @@ from core.audit.registries import action_registry
 class ActionHandler:
     @classmethod
     def undo(cls, user, action_id: int) -> Action:
-        try:
-            action = Action.objects.select_for_update(of=("self",)).get(
-                pk=action_id, user=user, undone_at__isnull=True
-            )
-        except Action.DoesNotExist:
-            raise ActionNotFoundError()
-
-        action_type_cls = action_registry.get(action.type)
-        if not issubclass(action_type_cls, UndoableActionType):
-            raise ActionNotUndoableError()
-
         with transaction.atomic():
+            try:
+                action = Action.objects.select_for_update(of=("self",)).get(
+                    pk=action_id, user=user, undone_at__isnull=True
+                )
+            except Action.DoesNotExist:
+                raise ActionNotFoundError()
+
+            action_type_cls = action_registry.get(action.type)
+            if not issubclass(action_type_cls, UndoableActionType):
+                raise ActionNotUndoableError()
+
             action_type_cls.undo(user, action.params, action)
             action.undone_at = timezone.now()
             action.error = None
@@ -32,18 +32,18 @@ class ActionHandler:
 
     @classmethod
     def redo(cls, user, action_id: int) -> Action:
-        try:
-            action = Action.objects.select_for_update(of=("self",)).get(
-                pk=action_id, user=user, undone_at__isnull=False
-            )
-        except Action.DoesNotExist:
-            raise ActionNotFoundError()
-
-        action_type_cls = action_registry.get(action.type)
-        if not issubclass(action_type_cls, UndoableActionType):
-            raise ActionNotRedoableError()
-
         with transaction.atomic():
+            try:
+                action = Action.objects.select_for_update(of=("self",)).get(
+                    pk=action_id, user=user, undone_at__isnull=False
+                )
+            except Action.DoesNotExist:
+                raise ActionNotFoundError()
+
+            action_type_cls = action_registry.get(action.type)
+            if not issubclass(action_type_cls, UndoableActionType):
+                raise ActionNotRedoableError()
+
             action_type_cls.redo(user, action.params, action)
             action.undone_at = None
             action.error = None

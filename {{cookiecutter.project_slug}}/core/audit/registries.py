@@ -41,27 +41,35 @@ class ActionTypeDescription:
     context: str = ""
 
 
-class ActionType(abc.ABC):
+class _ActionTypeMeta(abc.ABCMeta):
+    def __call__(cls, *args, **kwargs):
+        raise TypeError(
+            f"{cls.__name__} cannot be instantiated. "
+            f"Use {cls.__name__}.do(user=..., ...) to execute an action."
+        )
+
+
+class ActionType(abc.ABC, metaclass=_ActionTypeMeta):
     type: str = ""
     description: ActionTypeDescription = ActionTypeDescription()
 
     @classmethod
-    def do(cls, *args, **kwargs) -> Any:
-        result = cls.perform(*args, **kwargs)
+    def do(cls, user, *args, **kwargs) -> Any:
+        result = cls.perform(user, *args, **kwargs)
         cls.register_action(
-            user=kwargs.get("user"),
+            user=user,
             params=result,
-            scope=cls.scope(*args, **kwargs),
+            scope=cls.scope(user, *args, **kwargs),
         )
         return result
 
     @classmethod
     @abc.abstractmethod
-    def perform(cls, *args, **kwargs) -> Any:
+    def perform(cls, user, *args, **kwargs) -> Any:
         ...
 
     @classmethod
-    def scope(cls, *args, **kwargs) -> str:
+    def scope(cls, user, *args, **kwargs) -> str:
         return "root"
 
     @classmethod
@@ -74,18 +82,19 @@ class ActionType(abc.ABC):
             action_type=cls,
             params=params,
             scope=scope,
+            action=None,
         )
 
 
 class UndoableActionType(ActionType):
     @classmethod
-    def do(cls, *args, **kwargs) -> Any:
+    def do(cls, user, *args, **kwargs) -> Any:
         with transaction.atomic():
-            result = cls.perform(*args, **kwargs)
+            result = cls.perform(user, *args, **kwargs)
             cls.register_action(
-                user=kwargs.get("user"),
+                user=user,
                 params=result,
-                scope=cls.scope(*args, **kwargs),
+                scope=cls.scope(user, *args, **kwargs),
             )
             return result
 
@@ -107,10 +116,10 @@ class UndoableActionType(ActionType):
         action_done.send(
             sender=cls,
             user=user,
-            action=action,
             action_type=cls,
             params=serialized,
             scope=scope,
+            action=action,
         )
         return action
 

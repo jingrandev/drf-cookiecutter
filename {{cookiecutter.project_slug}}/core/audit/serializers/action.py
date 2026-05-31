@@ -4,11 +4,13 @@ from core.audit.models import Action
 
 
 class ActionSerializer(serializers.ModelSerializer):
+    user_id = serializers.IntegerField(source="user_id", read_only=True, default=None)
+
     class Meta:
         model = Action
         fields = [
             "id",
-            "user",
+            "user_id",
             "type",
             "params",
             "scope",
@@ -23,5 +25,5 @@ class ActionSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
-class UndoRedoSerializer(serializers.Serializer):
+class UndoRedoRequestSerializer(serializers.Serializer):
     action_id = serializers.IntegerField()
