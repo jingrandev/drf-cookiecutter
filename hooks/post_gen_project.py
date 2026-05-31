@@ -11,7 +11,7 @@ FEATURE_REGISTRY = {
     },
     "celery": {
         "dirs": ["libs/mq", "compose/local/django/celery"],
-        "files": [],
+        "files": ["config/celery.py"],
     },
     "email": {
         "dirs": ["libs/email"],

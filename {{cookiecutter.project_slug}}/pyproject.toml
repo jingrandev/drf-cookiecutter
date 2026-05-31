@@ -65,8 +65,12 @@ dependencies = [
   {%- else %}
   "django-constance>=4.0",
   {%- endif %}
-  {%- if cookiecutter.use_celery == "yes" %}
+  {%- if cookiecutter.use_celery == "yes" and cookiecutter.celery_pool == "gevent" %}
+  "celery[gevent]>=5.6.2",
+  {%- elif cookiecutter.use_celery == "yes" %}
   "celery>=5.6.2",
+  {%- endif %}
+  {%- if cookiecutter.use_celery == "yes" %}
   "django-celery-beat>=2.8.1",
   "flower>=2.0",
   {%- endif %}
