@@ -32,6 +32,17 @@ def get_correlation_id():
     return get_guid() or "-"
 
 
+def safe_message(message):
+    if "<" in message or ">" in message or "{" in message or "}" in message:
+        return (
+            message.replace("<", r"\<")
+            .replace(">", r"\>")
+            .replace("{", r"\{")
+            .replace("}", r"\}")
+        )
+    return message
+
+
 class LoguruHandler(logging.Handler):
     def emit(self, record: logging.LogRecord):
         level: str | int
@@ -48,15 +59,6 @@ class LoguruHandler(logging.Handler):
             frame = frame.f_back
             depth += 1
 
-        message = record.getMessage()
-        if "<" in message or ">" in message or "{" in message or "}" in message:
-            message = (
-                message.replace("<", r"\<")
-                .replace(">", r"\>")
-                .replace("{", r"\{")
-                .replace("}", r"\}")
-            )
-
         correlation_id = get_correlation_id()
 
         (
@@ -67,5 +69,5 @@ class LoguruHandler(logging.Handler):
                 lazy=True,
             )
             .bind(correlation_id=correlation_id)
-            .log(level, message)
+            .log(level, safe_message(record.getMessage()))
         )
