@@ -73,6 +73,7 @@ dependencies = [
   {%- endif %}
   {%- if cookiecutter.use_celery == "yes" %}
   "django-celery-beat>=2.8.1",
+  "django-celery-results>=2.6",
   "flower>=2.0",
   {%- endif %}
   {%- if cookiecutter.use_email == "yes" %}
@@ -81,6 +82,7 @@ dependencies = [
   {%- if cookiecutter.use_auditlog == "yes" %}
   "django-auditlog>=3.4.0",
   {%- endif %}
+  "dj-control-room[urls,signals{%- if cookiecutter.use_redis == "yes" %},redis,cache{%- endif %}{%- if cookiecutter.use_celery == "yes" %},celery{%- endif %}]>=1.7",
 ]
 
 [dependency-groups]

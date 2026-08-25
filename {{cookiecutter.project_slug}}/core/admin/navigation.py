@@ -62,9 +62,62 @@ def sidebar_navigation(request):
                     "icon": "alarm",
                     "link": reverse_lazy("admin:django_celery_beat_clockedschedule_changelist"),
                 },
+                {%- if cookiecutter.use_redis == "no" %}
+                {
+                    "title": "Task Results",
+                    "icon": "fact_check",
+                    "link": reverse_lazy("admin:django_celery_results_taskresult_changelist"),
+                },
+                {
+                    "title": "Group Results",
+                    "icon": "account_tree",
+                    "link": reverse_lazy("admin:django_celery_results_groupresult_changelist"),
+                },
+                {%- endif %}
             ],
         },
         {%- endif %}
+        {
+            "title": "Control Room",
+            "separator": True,
+            "collapsible": True,
+            "items": [
+                {
+                    "title": "Dashboard",
+                    "icon": "space_dashboard",
+                    "link": reverse_lazy("dj_control_room:index"),
+                },
+                {%- if cookiecutter.use_redis == "yes" %}
+                {
+                    "title": "Redis",
+                    "icon": "database",
+                    "link": reverse_lazy("dj_redis_panel:index"),
+                },
+                {
+                    "title": "Cache",
+                    "icon": "cached",
+                    "link": reverse_lazy("dj_cache_panel:index"),
+                },
+                {%- endif %}
+                {%- if cookiecutter.use_celery == "yes" %}
+                {
+                    "title": "Celery",
+                    "icon": "task_alt",
+                    "link": reverse_lazy("dj_celery_panel:index"),
+                },
+                {%- endif %}
+                {
+                    "title": "URLs",
+                    "icon": "link",
+                    "link": "/admin/dj-urls-panel/?namespace=api:v1",
+                },
+                {
+                    "title": "Signals",
+                    "icon": "sensors",
+                    "link": reverse_lazy("dj_signals_panel:index"),
+                },
+            ],
+        },
         {
             "title": "Feature Flags",
             "separator": True,

@@ -3,9 +3,6 @@ import os
 
 from .base import *
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
 # SECURITY WARNING: define the correct hosts in production!
 ALLOWED_HOSTS = ["*"]
 

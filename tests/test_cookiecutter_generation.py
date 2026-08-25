@@ -234,7 +234,7 @@ FEATURE_DIR_MAP = {
 }
 
 FEATURE_STRING_MARKERS = {
-    "redis": ["django-redis", "REDIS_URL", "libs.cache"],
+    "redis": ["django-redis", "REDIS_URL", "libs.cache", "dj_redis_panel", "dj_cache_panel"],
     "celery": [
         "CELERY_BROKER_URL",
         "CELERY_RESULT_BACKEND",
@@ -242,6 +242,7 @@ FEATURE_STRING_MARKERS = {
         "django_celery_beat",
         "celery_worker",
         "celery_beat",
+        "dj_celery_panel",
     ],
     "email": ["libs.email"],
 }
@@ -337,3 +338,93 @@ def test_email_tasks_conditional(cookies, context, context_override):
         assert tasks_path.exists(), "tasks.py should exist when both email and celery are enabled"
     elif email_on:
         assert not tasks_path.exists(), "tasks.py should not exist when email is on but celery is off"
+
+
+@pytest.mark.parametrize("context_override", FEATURE_COMBINATIONS, ids=_feature_combo_id)
+def test_celery_result_backend_matrix(cookies, context, context_override):
+    """Result backend: django-cache (redis on) / django-db (redis off); app installed whenever celery is on."""
+    result = cookies.bake(extra_context={**context, **context_override})
+    assert result.exit_code == 0
+    assert result.exception is None
+
+    celery_on = context_override.get("use_celery", "no") == "yes"
+    redis_on = context_override.get("use_redis", "no") == "yes"
+
+    settings_content = (result.project_path / "config" / "settings" / "base.py").read_text()
+    pyproject_content = (result.project_path / "pyproject.toml").read_text()
+
+    if not celery_on:
+        assert "django-celery-results" not in pyproject_content
+        assert "django_celery_results" not in settings_content
+        return
+
+    assert "django-celery-results" in pyproject_content
+    assert '"django_celery_results",' in settings_content
+    navigation_content = (result.project_path / "core" / "admin" / "navigation.py").read_text()
+    task_result_link = "admin:django_celery_results_taskresult_changelist"
+    if redis_on:
+        assert 'CELERY_RESULT_BACKEND = "django-cache"' in settings_content
+        assert 'CELERY_CACHE_BACKEND = "default"' in settings_content
+        assert task_result_link not in navigation_content
+    else:
+        assert 'CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="django-db")' in settings_content
+        assert "CELERY_RESULT_EXTENDED = True" in settings_content
+        assert task_result_link in navigation_content
+
+
+@pytest.mark.parametrize("context_override", FEATURE_COMBINATIONS, ids=_feature_combo_id)
+def test_control_room_always_integrated(cookies, context, context_override):
+    """dj-control-room core is always installed; panels follow use_redis/use_celery."""
+    result = cookies.bake(extra_context={**context, **context_override})
+    assert result.exit_code == 0
+    assert result.exception is None
+
+    redis_on = context_override.get("use_redis", "no") == "yes"
+    celery_on = context_override.get("use_celery", "no") == "yes"
+
+    settings_content = (result.project_path / "config" / "settings" / "base.py").read_text()
+    urls_content = (result.project_path / "config" / "urls.py").read_text()
+    middleware_content = (result.project_path / "core" / "admin" / "middleware.py").read_text()
+
+    assert '"dj_control_room_base",' in settings_content
+    assert '"dj_control_room",' in settings_content
+    assert '"dj_urls_panel",' in settings_content
+    assert '"dj_signals_panel",' in settings_content
+    assert "DJ_CONTROL_ROOM_SETTINGS" in settings_content
+    assert '[] if DEBUG else ["core_admin/css/dcr_dashboard.css"]' in settings_content
+    assert (result.project_path / "core" / "admin" / "static" / "core_admin" / "css" / "dcr_dashboard.css").is_file()
+
+    local_content = (result.project_path / "config" / "settings" / "local.py").read_text()
+    production_content = (result.project_path / "config" / "settings" / "production.py").read_text()
+    assert "DEBUG = True" not in local_content
+    assert "DEBUG = False" not in production_content
+
+    start_script = (result.project_path / "compose" / "local" / "django" / "start").read_text()
+    assert "python manage.py collectstatic --noinput" in start_script
+
+    assert "DJ_URLS_PANEL_SETTINGS" in settings_content
+    assert 'r".*\\?P<format>"' in settings_content
+    assert 'path("admin/dj-control-room/", include("dj_control_room.urls"))' in urls_content
+    assert "/admin/dj-control-room/mcp" in middleware_content
+
+    assert ('"dj_redis_panel",' in settings_content) == redis_on
+    assert ('"dj_cache_panel",' in settings_content) == redis_on
+    assert ('path("admin/dj-redis-panel/"' in urls_content) == redis_on
+    assert ("DJ_REDIS_PANEL_SETTINGS" in settings_content) == redis_on
+    if redis_on and celery_on:
+        assert '"celery-broker"' in settings_content
+    if redis_on and not celery_on:
+        assert '"celery-broker"' not in settings_content
+    assert ('"dj_celery_panel",' in settings_content) == celery_on
+    assert ('path("admin/dj-celery-panel/"' in urls_content) == celery_on
+
+
+def test_django_guid_logs_demoted(cookies, context):
+    """django_guid's per-request INFO noise must be demoted to DEBUG visibility."""
+    result = cookies.bake(extra_context=context)
+    assert result.exit_code == 0
+    assert result.exception is None
+
+    setup_content = (result.project_path / "libs" / "logging" / "setup.py").read_text()
+    assert 'logging.getLogger("django_guid")' in setup_content
+    assert '"DEBUG" if log_level == "DEBUG" else "WARNING"' in setup_content

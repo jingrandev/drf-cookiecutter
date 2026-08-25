@@ -59,10 +59,22 @@ THIRD_PARTY_APPS = [
     "django_guid",
     {%- if cookiecutter.use_celery == "yes" %}
     "django_celery_beat",
+    "django_celery_results",
     {%- endif %}
     {%- if cookiecutter.use_auditlog == "yes" %}
     "auditlog",
     {%- endif %}
+    "dj_control_room_base",
+    {%- if cookiecutter.use_redis == "yes" %}
+    "dj_redis_panel",
+    "dj_cache_panel",
+    {%- endif %}
+    {%- if cookiecutter.use_celery == "yes" %}
+    "dj_celery_panel",
+    {%- endif %}
+    "dj_urls_panel",
+    "dj_signals_panel",
+    "dj_control_room",
 ]
 LOCAL_APPS = [
     "core.auth",
@@ -306,7 +318,13 @@ AUDITLOG_RETENTION_DAYS = env.int("AUDITLOG_RETENTION_DAYS", default=90)
 {%- if cookiecutter.use_celery == "yes" %}
 
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://localhost:6379/1")
-CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="redis://localhost:6379/2")
+{%- if cookiecutter.use_redis == "yes" %}
+CELERY_RESULT_BACKEND = "django-cache"
+CELERY_CACHE_BACKEND = "default"
+{%- else %}
+CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="django-db")
+CELERY_RESULT_EXTENDED = True
+{%- endif %}
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
@@ -314,6 +332,36 @@ CELERY_TIMEZONE = TIME_ZONE
 CELERY_ENABLE_UTC = True
 CELERY_WORKER_POOL = "{{ cookiecutter.celery_pool }}"
 CELERY_WORKER_CONCURRENCY = env.int("CELERY_WORKER_CONCURRENCY", default=10)
+{%- endif %}
+
+# DJ CONTROL ROOM
+# MCP note: dj-control-room resolves MCP_USERNAME via the `username` field,
+# which is absent when username_type=email (upstream fix pending).
+# ------------------------------------------------------------------------------
+DJ_CONTROL_ROOM_MCP_TOKEN = env("DJ_CONTROL_ROOM_MCP_TOKEN", default="")
+DJ_CONTROL_ROOM_SETTINGS = {
+    "MCP_ENABLED": env.bool("DJ_CONTROL_ROOM_MCP_ENABLED", default=True),
+    "MCP_TOKEN": DJ_CONTROL_ROOM_MCP_TOKEN,
+    "MCP_USERNAME": env("DJ_CONTROL_ROOM_MCP_USERNAME", default="admin"),
+    "EXTRA_CSS": [] if DEBUG else ["core_admin/css/dcr_dashboard.css"],
+}
+
+DJ_URLS_PANEL_SETTINGS = {
+    "EXCLUDE_URLS": [
+        r".*\?P<format>",
+        r".*<drf_format_suffix:format>",
+    ],
+}
+{%- if cookiecutter.use_redis == "yes" %}
+
+DJ_REDIS_PANEL_SETTINGS = {
+    "INSTANCES": {
+        "cache": {"url": env("REDIS_URL", default="redis://localhost:6379/0")},
+        {%- if cookiecutter.use_celery == "yes" %}
+        "celery-broker": {"url": env("CELERY_BROKER_URL", default="redis://localhost:6379/1")},
+        {%- endif %}
+    },
+}
 {%- endif %}
 
 

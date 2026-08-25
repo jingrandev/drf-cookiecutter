@@ -3,8 +3,6 @@ from .base import *
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 
-DEBUG = False
-
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_BROWSER_XSS_FILTER = True
