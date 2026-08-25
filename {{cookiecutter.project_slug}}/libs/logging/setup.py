@@ -103,5 +103,5 @@ def setup_logging():
     }
 
     logging.basicConfig(handlers=[LoguruHandler()], level=0, force=True)
-    logging.getLogger("django_guid").setLevel("DEBUG" if log_level == "DEBUG" else "WARNING")
+    logging.getLogger("django_guid").setLevel("DEBUG" if debug else "WARNING")
     logger.configure(**config)

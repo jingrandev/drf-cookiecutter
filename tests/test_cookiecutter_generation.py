@@ -420,11 +420,11 @@ def test_control_room_always_integrated(cookies, context, context_override):
 
 
 def test_django_guid_logs_demoted(cookies, context):
-    """django_guid's per-request INFO noise must be demoted to DEBUG visibility."""
+    """django_guid's per-request INFO noise only surfaces in DEBUG mode."""
     result = cookies.bake(extra_context=context)
     assert result.exit_code == 0
     assert result.exception is None
 
     setup_content = (result.project_path / "libs" / "logging" / "setup.py").read_text()
     assert 'logging.getLogger("django_guid")' in setup_content
-    assert '"DEBUG" if log_level == "DEBUG" else "WARNING"' in setup_content
+    assert '"DEBUG" if debug else "WARNING"' in setup_content
