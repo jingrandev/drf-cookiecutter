@@ -51,12 +51,14 @@ THIRD_PARTY_APPS = [
     "rest_framework_simplejwt",
     "djoser",
     "drf_spectacular",
-    "encrypted_model_fields",
     "simple_history",
     "constance",
     "django_guid",
     {%- if cookiecutter.use_celery == "yes" %}
     "django_celery_beat",
+    {%- endif %}
+    {%- if cookiecutter.use_auditlog == "yes" %}
+    "auditlog",
     {%- endif %}
 ]
 LOCAL_APPS = [
@@ -72,9 +74,6 @@ LOCAL_APPS = [
     {%- endif %}
     {%- if cookiecutter.use_email == "yes" %}
     "libs.email",
-    {%- endif %}
-    {%- if cookiecutter.use_command == "yes" %}
-    "core.command",
     {%- endif %}
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -96,6 +95,9 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    {%- if cookiecutter.use_auditlog == "yes" %}
+    "auditlog.middleware.AuditlogMiddleware",
+    {%- endif %}
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
@@ -285,11 +287,15 @@ CONCURRENT_REQUESTS_TIMEOUT = env.int("CONCURRENT_REQUESTS_TIMEOUT", default=60)
 THROTTLE_BLACKLIST_TTL = env.int("THROTTLE_BLACKLIST_TTL", default=30)
 THROTTLE_IP_ENABLED = env.bool("THROTTLE_IP_ENABLED", default=True)
 {%- endif %}
-{%- if cookiecutter.use_command == "yes" %}
+{%- if cookiecutter.use_auditlog == "yes" %}
 
-# COMMAND
+# AUDITLOG
+# Note: bulk_create/bulk_update/QuerySet.update do not trigger audit logging.
+# Use obj.save() for auditable changes.
 # ------------------------------------------------------------------------------
-COMMAND_RETENTION_DAYS = env.int("COMMAND_RETENTION_DAYS", default=90)
+AUDITLOG_CID_GETTER = "libs.logging.handlers.get_correlation_id"
+AUDITLOG_INCLUDE_ALL_MODELS = False
+AUDITLOG_RETENTION_DAYS = env.int("AUDITLOG_RETENTION_DAYS", default=90)
 {%- endif %}
 {%- if cookiecutter.use_celery == "yes" %}
 

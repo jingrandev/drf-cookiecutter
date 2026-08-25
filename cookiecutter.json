@@ -19,5 +19,5 @@
   "use_celery": ["no", "yes"],
   "celery_pool": ["prefork", "gevent"],
   "use_email": ["no", "yes"],
-  "use_command": ["no", "yes"]
+  "use_auditlog": ["no", "yes"]
 }

@@ -17,10 +17,6 @@ FEATURE_REGISTRY = {
         "dirs": ["libs/email"],
         "files": [],
     },
-    "command": {
-        "dirs": ["core/command"],
-        "files": [],
-    },
 }
 
 CONDITIONAL_FILES = {
@@ -32,13 +28,17 @@ CONDITIONAL_FILES = {
         "file": "libs/logging/celery_signals.py",
         "requires": {"celery": "yes"},
     },
+    "mq_tasks.py": {
+        "file": "libs/mq/tasks.py",
+        "requires": {"celery": "yes", "auditlog": "yes"},
+    },
 }
 
 FEATURE_FLAGS = {
     "redis": "{{ cookiecutter.use_redis }}",
     "celery": "{{ cookiecutter.use_celery }}",
     "email": "{{ cookiecutter.use_email }}",
-    "command": "{{ cookiecutter.use_command }}",
+    "auditlog": "{{ cookiecutter.use_auditlog }}",
 }
 
 # Get the absolute path of the current project directory

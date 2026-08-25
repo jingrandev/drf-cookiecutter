@@ -77,6 +77,9 @@ dependencies = [
   {%- if cookiecutter.use_email == "yes" %}
   "jinja2>=3.1.4",
   {%- endif %}
+  {%- if cookiecutter.use_auditlog == "yes" %}
+  "django-auditlog>=3.4.0",
+  {%- endif %}
 ]
 
 [dependency-groups]

@@ -3,9 +3,9 @@ from django_celery_beat.models import IntervalSchedule
 from django_celery_beat.models import PeriodicTask
 
 PERIODIC_TASKS: dict[str, dict] = {
-{%- if cookiecutter.use_command == "yes" %}
-    "audit_cleanup_old_commands": {
-        "task": "core.command.tasks.cleanup_old_commands",
+{%- if cookiecutter.use_auditlog == "yes" %}
+    "auditlog_cleanup": {
+        "task": "libs.mq.tasks.cleanup_auditlog",
         "crontab": {
             "minute": "0",
             "hour": "3",
