@@ -1,7 +1,7 @@
 import inspect
 import logging
 import os
-from threading import local
+from contextvars import ContextVar
 
 from django_guid import get_guid
 from loguru import logger
@@ -11,22 +11,19 @@ LOGGING_PATHS: set[str] = {
     os.path.dirname(os.path.abspath(__file__)),
 }
 
-correlation_override = local()
+correlation_override: ContextVar[str | None] = ContextVar("correlation_id", default=None)
 
 
 def set_correlation_id(correlation_id: str):
-    correlation_override.correlation_id = correlation_id
+    correlation_override.set(correlation_id)
 
 
 def clear_correlation_id():
-    try:
-        del correlation_override.correlation_id
-    except AttributeError:
-        pass
+    correlation_override.set(None)
 
 
 def get_correlation_id():
-    override = getattr(correlation_override, "correlation_id", None)
+    override = correlation_override.get()
     if override:
         return override
     return get_guid() or "-"
