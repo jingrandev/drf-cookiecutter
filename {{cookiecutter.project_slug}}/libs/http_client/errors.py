@@ -5,22 +5,22 @@ from core.restframework.error_handler import BaseError
 
 
 class ClientRequestError(BaseError):
-    code = 4100
+    code = "HC_1000"
     message = _("internal client request error")
 
 
 class ClientTimeoutError(ClientRequestError):
-    code = 4101
+    code = "HC_1001"
     message = _("request timeout error")
 
 
 class ClientConnectionError(ClientRequestError):
-    code = 4102
+    code = "HC_1002"
     message = _("connection error")
 
 
 class ClientResponseError(ClientRequestError):
-    code = 4103
+    code = "HC_1003"
     message = _("invalid response error")
 
     def __init__(

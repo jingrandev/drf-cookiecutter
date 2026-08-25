@@ -59,7 +59,12 @@ class HTTPClientTest(TestCase):
     @responses.activate
     def test_request_with_get_method(self):
         """Test GET request method"""
-        responses.add(responses.GET, f"{self.host}/users", json={"id": 1, "name": "John"}, status=200)
+        responses.add(
+            responses.GET,
+            f"{self.host}/users",
+            json={"id": 1, "name": "John"},
+            status=200,
+        )
 
         response = self.client.request(HTTPMethod.GET, "/users")
 
@@ -69,9 +74,16 @@ class HTTPClientTest(TestCase):
     @responses.activate
     def test_request_with_post_method(self):
         """Test POST request method"""
-        responses.add(responses.POST, f"{self.host}/users", json={"id": 2, "name": "Smith"}, status=201)
+        responses.add(
+            responses.POST,
+            f"{self.host}/users",
+            json={"id": 2, "name": "Smith"},
+            status=201,
+        )
 
-        response = self.client.request(HTTPMethod.POST, "/users", json={"name": "Smith"})
+        response = self.client.request(
+            HTTPMethod.POST, "/users", json={"name": "Smith"}
+        )
 
         assert response.status_code == 201
         assert response.json() == {"id": 2, "name": "Smith"}
@@ -79,9 +91,16 @@ class HTTPClientTest(TestCase):
     @responses.activate
     def test_request_with_put_method(self):
         """Test PUT request method"""
-        responses.add(responses.PUT, f"{self.host}/users/1", json={"id": 1, "name": "John Updated"}, status=200)
+        responses.add(
+            responses.PUT,
+            f"{self.host}/users/1",
+            json={"id": 1, "name": "John Updated"},
+            status=200,
+        )
 
-        response = self.client.request(HTTPMethod.PUT, "/users/1", json={"name": "John Updated"})
+        response = self.client.request(
+            HTTPMethod.PUT, "/users/1", json={"name": "John Updated"}
+        )
 
         assert response.status_code == 200
         assert response.json() == {"id": 1, "name": "John Updated"}
@@ -106,7 +125,9 @@ class HTTPClientTest(TestCase):
             match=[responses.matchers.query_param_matcher({"role": "admin"})],
         )
 
-        response = self.client.request(HTTPMethod.GET, "/users", params={"role": "admin"})
+        response = self.client.request(
+            HTTPMethod.GET, "/users", params={"role": "admin"}
+        )
 
         assert response.status_code == 200
         assert response.json() == [{"id": 1, "name": "John"}]
@@ -130,7 +151,12 @@ class HTTPClientTest(TestCase):
     @responses.activate
     def test_http_error_handling(self):
         """Test HTTP error handling"""
-        responses.add(responses.GET, f"{self.host}/not-found", json={"error": "Resource not found"}, status=404)
+        responses.add(
+            responses.GET,
+            f"{self.host}/not-found",
+            json={"error": "Resource not found"},
+            status=404,
+        )
 
         with pytest.raises(ClientResponseError) as exc_info:
             self.client.request(HTTPMethod.GET, "/not-found")
@@ -154,13 +180,17 @@ class HTTPClientTest(TestCase):
 
     def test_method_invalid_type_raises_type_error(self):
         """Non-string and non-HTTPMethod should raise TypeError"""
-        with pytest.raises(TypeError, match="method must be a string or HTTPMethod enum"):
+        with pytest.raises(
+            TypeError, match="method must be a string or HTTPMethod enum"
+        ):
             self.client.request(123, "/users")
 
     @responses.activate
     def test_lowercase_method_string_should_work(self):
         """Lowercase method string should be normalized"""
-        responses.add(responses.GET, f"{self.host}/users", json={"ok": True}, status=200)
+        responses.add(
+            responses.GET, f"{self.host}/users", json={"ok": True}, status=200
+        )
         resp = self.client.request("get", "/users")
         assert resp.status_code == 200
         assert resp.json() == {"ok": True}
@@ -200,7 +230,7 @@ class HTTPClientTest(TestCase):
 
     @mock.patch("requests.Session.request")
     def test_verify_ssl_propagation(self, mock_request):
-        """verify parameter should follow verify_ssl config"""
+        """Verify parameter should follow verify_ssl config"""
         client = HTTPClient(host=self.host, config={"verify_ssl": False})
         mock_request.return_value = mock.Mock(status_code=200)
         mock_request.return_value.raise_for_status.return_value = None
@@ -213,7 +243,9 @@ class HTTPClientTest(TestCase):
     def test_url_join_with_trailing_slash(self):
         """Host trailing slash should not break URL join"""
         client = HTTPClient(host=f"{self.host}/")
-        responses.add(responses.GET, f"{self.host}/users", json={"ok": True}, status=200)
+        responses.add(
+            responses.GET, f"{self.host}/users", json={"ok": True}, status=200
+        )
         resp = client.request(HTTPMethod.GET, "/users")
         assert resp.status_code == 200
         client.close()
