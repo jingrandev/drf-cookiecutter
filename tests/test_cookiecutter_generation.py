@@ -162,6 +162,17 @@ def test_unfold_admin_wiring(cookies, context, context_override):
     assert '"SIDEBAR"' in content
     assert "core.admin.navigation.sidebar_navigation" in content
     assert "core.admin.callbacks.environment_callback" in content
+    assert '"waffle"' in content
+    assert "waffle.middleware.WaffleMiddleware" in content
+    assert '"core.admin"' in content
+
+    admin_pkg = result.project_path / "core" / "admin"
+    assert (admin_pkg / "apps.py").is_file()
+    assert (admin_pkg / "admin.py").is_file()
+
+    with open(result.project_path / "pyproject.toml", encoding="utf-8") as f:
+        pyproject_content = f.read()
+    assert "django-waffle" in pyproject_content
 
     navigation_path = result.project_path / "core" / "admin" / "navigation.py"
     assert navigation_path.is_file()
@@ -170,6 +181,7 @@ def test_unfold_admin_wiring(cookies, context, context_override):
 
     assert "admin:authentication_user_changelist" in navigation_content
     assert "admin:constance_config_changelist" in navigation_content
+    assert "admin:waffle_flag_changelist" in navigation_content
 
     celery_marker = "admin:django_celery_beat_periodictask_changelist"
     auditlog_marker = "admin:auditlog_logentry_changelist"

@@ -51,6 +51,7 @@ dependencies = [
   "pydantic>=2.10",
   "pydantic-settings>=2.7",
   "django-unfold>=0.51",
+  "django-waffle>=5.0",
   "django-guid>=3.6",
   "gunicorn>=23.0",
   "uvicorn[standard]>=0.34",

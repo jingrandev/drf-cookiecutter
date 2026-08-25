@@ -55,6 +55,7 @@ THIRD_PARTY_APPS = [
     "drf_spectacular",
     "simple_history",
     "constance",
+    "waffle",
     "django_guid",
     {%- if cookiecutter.use_celery == "yes" %}
     "django_celery_beat",
@@ -65,6 +66,7 @@ THIRD_PARTY_APPS = [
 ]
 LOCAL_APPS = [
     "core.auth",
+    "core.admin",
     "libs.di",
     "apps.api",
     "libs.logging",
@@ -98,6 +100,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "waffle.middleware.WaffleMiddleware",
     {%- if cookiecutter.use_auditlog == "yes" %}
     "auditlog.middleware.AuditlogMiddleware",
     {%- endif %}

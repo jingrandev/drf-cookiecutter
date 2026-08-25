@@ -113,7 +113,9 @@ make migrate       # migrate
 
 5. **API versioning** — URL prefix `/api/v1/` via `drf_spectacular` schema prefix.
 
-6. **Admin security gate** — `core/admin/middleware.py` (`AdminGateMiddleware`). When `ADMIN_SECURITY_CODE` env var is set, all `/admin/` paths return 404 until the visitor opens `/admin/<code>/`, which sets a session flag and redirects to the admin. Unset = gate disabled. Unlock is handled inside the middleware (not a URL route) to avoid colliding with single-segment admin URLs like `/admin/login/`. The module is intentionally a plain package (no `apps.py`, not in `INSTALLED_APPS`) so its label can't clash with `django.contrib.admin`; it is the admin framework layer — also hosts `navigation.py` (Unfold sidebar callback) and `callbacks.py` (environment badge), and future extensions (base ModelAdmins, dashboard callbacks, filters, actions) belong here too.
+6. **Admin security gate** — `core/admin/middleware.py` (`AdminGateMiddleware`). When the Constance config `ADMIN_SECURITY_CODE` is non-empty (seeded from the env var of the same name, afterwards edited in the admin), all `/admin/` paths return 404 until the visitor opens `/admin/<code>/`, which sets a session flag and redirects to the admin. Empty value = gate disabled. Unlock is handled inside the middleware (not a URL route) to avoid colliding with single-segment admin URLs like `/admin/login/`.
+
+7. **Admin framework layer** — `core/admin/` is a registered app (`label = "core_admin"` to avoid clashing with `django.contrib.admin`) hosting admin-level framework code: `middleware.py` (security gate), `navigation.py` (Unfold sidebar callback), `callbacks.py` (environment badge), `admin.py` (third-party admin re-registration, e.g. django-waffle with Unfold classes). Future extensions (base ModelAdmins, dashboard callbacks, filters, actions) belong here too.
 
 ## Testing
 

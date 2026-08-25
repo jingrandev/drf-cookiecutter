@@ -66,6 +66,28 @@ def sidebar_navigation(request):
         },
         {%- endif %}
         {
+            "title": "Feature Flags",
+            "separator": True,
+            "collapsible": True,
+            "items": [
+                {
+                    "title": "Flags",
+                    "icon": "flag",
+                    "link": reverse_lazy("admin:waffle_flag_changelist"),
+                },
+                {
+                    "title": "Switches",
+                    "icon": "toggle_on",
+                    "link": reverse_lazy("admin:waffle_switch_changelist"),
+                },
+                {
+                    "title": "Samples",
+                    "icon": "science",
+                    "link": reverse_lazy("admin:waffle_sample_changelist"),
+                },
+            ],
+        },
+        {
             "title": "System",
             "separator": True,
             "collapsible": True,
