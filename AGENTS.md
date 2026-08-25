@@ -17,6 +17,7 @@ drf-cookiecutter/
 ├── {{cookiecutter.project_slug}}/ # Template source (Jinja2 variables everywhere)
 │   ├── config/                    # Django project settings
 │   ├── core/                      # Shared framework code
+│   │   ├── admin/                 # Admin framework layer (security gate middleware; future base ModelAdmins, dashboard)
 │   │   ├── auth/                  # Custom User model + JWT auth
 │   │   ├── db/                    # BaseModel, SoftDelete, managers, querysets
 │   │   ├── restframework/         # DRF extensions (renderer, error handler, pagination, viewsets)
@@ -36,18 +37,18 @@ drf-cookiecutter/
 
 ## cookiecutter.json Options
 
-| Variable | Type | Description |
-|---|---|---|
-| `project_name` | string | Human-readable project name |
-| `project_slug` | auto-derived | Directory/files slug (from project_name) |
-| `description` | string | Project description |
-| `author_name` | string | Author name |
-| `email` | string | Contact email |
-| `version` | string | Initial version (default 0.1.0) |
-| `username_type` | choice: `username`, `email` | Changes User model and auth flow |
-| `open_source_license` | choice | MIT, BSD, GPLv3, Apache 2.0, or Not open source |
-| `python_version` | choice: `3.12`, `3.13`, `3.14` | Target Python version |
-| `database_engine` | choice: `postgres`, `mysql` | Database engine (affects deps, Docker, config) |
+| Variable              | Type                           | Description                                     |
+| --------------------- | ------------------------------ | ----------------------------------------------- |
+| `project_name`        | string                         | Human-readable project name                     |
+| `project_slug`        | auto-derived                   | Directory/files slug (from project_name)        |
+| `description`         | string                         | Project description                             |
+| `author_name`         | string                         | Author name                                     |
+| `email`               | string                         | Contact email                                   |
+| `version`             | string                         | Initial version (default 0.1.0)                 |
+| `username_type`       | choice: `username`, `email`    | Changes User model and auth flow                |
+| `open_source_license` | choice                         | MIT, BSD, GPLv3, Apache 2.0, or Not open source |
+| `python_version`      | choice: `3.12`, `3.13`, `3.14` | Target Python version                           |
+| `database_engine`     | choice: `postgres`, `mysql`    | Database engine (affects deps, Docker, config)  |
 
 Jinja2 conditionals in the template use these variables: `{% if cookiecutter.username_type == "email" %}`, `{%- if cookiecutter.database_engine == 'postgres' %}`, etc.
 
@@ -111,6 +112,8 @@ make migrate       # migrate
 4. **Dual JWT auth** — `CookieJWTAuthentication` reads JWT from cookies; standard `JWTAuthentication` reads from Authorization header. Both active by default.
 
 5. **API versioning** — URL prefix `/api/v1/` via `drf_spectacular` schema prefix.
+
+6. **Admin security gate** — `core/admin/middleware.py` (`AdminGateMiddleware`). When `ADMIN_SECURITY_CODE` env var is set, all `/admin/` paths return 404 until the visitor opens `/admin/<code>/`, which sets a session flag and redirects to the admin. Unset = gate disabled. Unlock is handled inside the middleware (not a URL route) to avoid colliding with single-segment admin URLs like `/admin/login/`. The module is intentionally a plain package (no `apps.py`, not in `INSTALLED_APPS`) so its label can't clash with `django.contrib.admin`; it is the admin framework layer — also hosts `navigation.py` (Unfold sidebar callback) and `callbacks.py` (environment badge), and future extensions (base ModelAdmins, dashboard callbacks, filters, actions) belong here too.
 
 ## Testing
 

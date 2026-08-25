@@ -117,6 +117,72 @@ def test_invalid_slug(cookies, context, slug):
     assert isinstance(result.exception, FailedHookException)
 
 
+def test_admin_gate_wiring(cookies, context):
+    """Admin security gate module and settings wiring must be present"""
+    result = cookies.bake(extra_context=context)
+    assert result.exit_code == 0
+    assert result.exception is None
+
+    middleware_path = result.project_path / "core" / "admin" / "middleware.py"
+    assert middleware_path.is_file()
+
+    gate_test_path = result.project_path / "core" / "admin" / "tests" / "test_admin_gate.py"
+    assert gate_test_path.is_file()
+
+    with open(result.project_path / "config" / "settings" / "base.py", encoding="utf-8") as f:
+        settings_content = f.read()
+    assert "core.admin.middleware.AdminGateMiddleware" in settings_content
+    assert 'env("ADMIN_SECURITY_CODE", default="")' in settings_content
+    assert '"ADMIN_SECURITY_CODE"' in settings_content
+
+    with open(result.project_path / ".env.example", encoding="utf-8") as f:
+        env_example = f.read()
+    assert "ADMIN_SECURITY_CODE" in env_example
+
+
+@pytest.mark.parametrize(
+    "context_override",
+    [
+        {"use_celery": "yes", "use_auditlog": "yes"},
+        {"use_celery": "no", "use_auditlog": "no"},
+    ],
+    ids=_fixture_id,
+)
+def test_unfold_admin_wiring(cookies, context, context_override):
+    """Unfold sidebar navigation and constance integration must be wired"""
+    result = cookies.bake(extra_context={**context, **context_override})
+    assert result.exit_code == 0
+    assert result.exception is None
+
+    with open(result.project_path / "config" / "settings" / "base.py", encoding="utf-8") as f:
+        content = f.read()
+
+    assert "unfold.contrib.constance" in content
+    assert "UNFOLD_CONSTANCE_ADDITIONAL_FIELDS" in content
+    assert '"SIDEBAR"' in content
+    assert "core.admin.navigation.sidebar_navigation" in content
+    assert "core.admin.callbacks.environment_callback" in content
+
+    navigation_path = result.project_path / "core" / "admin" / "navigation.py"
+    assert navigation_path.is_file()
+    with open(navigation_path, encoding="utf-8") as f:
+        navigation_content = f.read()
+
+    assert "admin:authentication_user_changelist" in navigation_content
+    assert "admin:constance_config_changelist" in navigation_content
+
+    celery_marker = "admin:django_celery_beat_periodictask_changelist"
+    auditlog_marker = "admin:auditlog_logentry_changelist"
+    if context_override["use_celery"] == "yes":
+        assert celery_marker in navigation_content
+    else:
+        assert celery_marker not in navigation_content
+    if context_override["use_auditlog"] == "yes":
+        assert auditlog_marker in navigation_content
+    else:
+        assert auditlog_marker not in navigation_content
+
+
 def test_trim_email(cookies, context):
     """Check that leading and trailing spaces are trimmed in email"""
     context.update({"email": " test@example.com "})

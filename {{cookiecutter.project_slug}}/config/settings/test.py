@@ -25,3 +25,8 @@ INSTALLED_APPS = [*INSTALLED_APPS, "core.tests"]  # noqa: F405
 SHOW_API_DOCS = True
 
 PROPAGATE_API_EXCEPTIONS = True
+
+# Store Constance values in the per-worker test database instead of shared Redis,
+# so parallel test runs don't race on config values.
+CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
+CONSTANCE_DATABASE_CACHE_BACKEND = None

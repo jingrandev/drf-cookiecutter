@@ -5,6 +5,7 @@ from pathlib import Path
 
 import environ
 from datetime import timedelta
+from unfold.contrib.constance.settings import UNFOLD_CONSTANCE_ADDITIONAL_FIELDS
 {%- if cookiecutter.use_celery == "yes" %}
 
 from django_guid.integrations import CeleryIntegration
@@ -37,6 +38,7 @@ ALLOWED_HOSTS = []
 # ------------------------------------------------------------------------------
 DJANGO_APPS = [
     "unfold",
+    "unfold.contrib.constance",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -92,6 +94,7 @@ MIDDLEWARE = [
     "libs.throttling.middleware.ThrottleBlacklistMiddleware",
     {%- endif %}
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "core.admin.middleware.AdminGateMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -311,19 +314,26 @@ CELERY_WORKER_CONCURRENCY = env.int("CELERY_WORKER_CONCURRENCY", default=10)
 {%- endif %}
 
 
-def environment_callback(request):
-    from django.conf import settings
-
-    if settings.DEBUG:
-        return ["Development", "warning"]
-    return ["Production", "success"]
-
-
 UNFOLD = {
+    "SITE_TITLE": "{{ cookiecutter.project_name }}",
+    "SITE_HEADER": "{{ cookiecutter.project_name }}",
+    "SITE_SUBHEADER": "{{ cookiecutter.description }}",
+    "SITE_SYMBOL": "speed",
     "SHOW_HISTORY": True,
     "SHOW_SIDEBAR": True,
-    "ENVIRONMENT": "config.settings.base.environment_callback",
+    "ENVIRONMENT": "core.admin.callbacks.environment_callback",
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": False,
+        "navigation": "core.admin.navigation.sidebar_navigation",
+    },
 }
+
+# ADMIN GATE
+# ------------------------------------------------------------------------------
+# Seed value for the Constance ADMIN_SECURITY_CODE config below.
+# Once changed in the admin, the stored Constance value takes precedence.
+ADMIN_SECURITY_CODE = env("ADMIN_SECURITY_CODE", default="")
 
 # DJANGO GUID
 # ------------------------------------------------------------------------------
@@ -351,7 +361,8 @@ CONSTANCE_REDIS_PREFIX = "constance:"
 CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
 CONSTANCE_DATABASE_CACHE_BACKEND = None
 {%- endif %}
-CONSTANCE_SUPERUSER_ONLY = False
+CONSTANCE_SUPERUSER_ONLY = True
+CONSTANCE_ADDITIONAL_FIELDS = {**UNFOLD_CONSTANCE_ADDITIONAL_FIELDS}
 
 CONSTANCE_CONFIG = {
     "SITE_NAME": (
@@ -364,9 +375,14 @@ CONSTANCE_CONFIG = {
         "Enable maintenance mode (returns 503)",
         bool,
     ),
+    "ADMIN_SECURITY_CODE": (
+        ADMIN_SECURITY_CODE,
+        "If set, /admin/ is hidden until unlocked via /admin/<code>/. Empty disables the gate.",
+        str,
+    ),
 }
 
 CONSTANCE_CONFIG_FIELDSETS = {
-    "General": ("SITE_NAME",),
-    "System": ("MAINTENANCE_MODE",),
+    "General": {"fields": ("SITE_NAME",)},
+    "System": {"fields": ("MAINTENANCE_MODE", "ADMIN_SECURITY_CODE")},
 }
