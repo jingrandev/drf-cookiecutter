@@ -218,3 +218,6 @@ tags
 
 # Cookiecutter project
 my-drf-project
+
+# Agent working docs (not for repo)
+docs/
