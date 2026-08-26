@@ -295,7 +295,16 @@ CACHES = {
         "OPTIONS": {
             "CLIENT_CLASS": "libs.cache.client.EnhancedRedisClient",
         },
-    }
+    },
+    {%- if cookiecutter.use_celery == "yes" %}
+    "celery_results": {
+        "BACKEND": "libs.cache.backend.EnhancedRedisCache",
+        "LOCATION": env("CELERY_RESULTS_REDIS_URL", default="redis://localhost:6379/2"),
+        "OPTIONS": {
+            "CLIENT_CLASS": "libs.cache.client.EnhancedRedisClient",
+        },
+    },
+    {%- endif %}
 }
 
 # THROTTLING
@@ -320,7 +329,7 @@ AUDITLOG_RETENTION_DAYS = env.int("AUDITLOG_RETENTION_DAYS", default=90)
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://localhost:6379/1")
 {%- if cookiecutter.use_redis == "yes" %}
 CELERY_RESULT_BACKEND = "django-cache"
-CELERY_CACHE_BACKEND = "default"
+CELERY_CACHE_BACKEND = "celery_results"
 {%- else %}
 CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="django-db")
 CELERY_RESULT_EXTENDED = True
@@ -359,6 +368,7 @@ DJ_REDIS_PANEL_SETTINGS = {
         "cache": {"url": env("REDIS_URL", default="redis://localhost:6379/0")},
         {%- if cookiecutter.use_celery == "yes" %}
         "celery-broker": {"url": env("CELERY_BROKER_URL", default="redis://localhost:6379/1")},
+        "celery-results": {"url": env("CELERY_RESULTS_REDIS_URL", default="redis://localhost:6379/2")},
         {%- endif %}
     },
 }

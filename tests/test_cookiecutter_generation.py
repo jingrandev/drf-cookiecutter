@@ -364,7 +364,11 @@ def test_celery_result_backend_matrix(cookies, context, context_override):
     task_result_link = "admin:django_celery_results_taskresult_changelist"
     if redis_on:
         assert 'CELERY_RESULT_BACKEND = "django-cache"' in settings_content
-        assert 'CELERY_CACHE_BACKEND = "default"' in settings_content
+        assert 'CELERY_CACHE_BACKEND = "celery_results"' in settings_content
+        assert '"celery_results"' in settings_content
+        assert 'env("CELERY_RESULTS_REDIS_URL", default="redis://localhost:6379/2")' in settings_content
+        env_example = (result.project_path / ".env.example").read_text()
+        assert "CELERY_RESULTS_REDIS_URL=redis://localhost:6379/2" in env_example
         assert task_result_link not in navigation_content
     else:
         assert 'CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="django-db")' in settings_content
