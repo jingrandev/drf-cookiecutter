@@ -432,3 +432,19 @@ def test_django_guid_logs_demoted(cookies, context):
     setup_content = (result.project_path / "libs" / "logging" / "setup.py").read_text()
     assert 'logging.getLogger("django_guid")' in setup_content
     assert '"DEBUG" if debug else "WARNING"' in setup_content
+
+
+def test_maintenance_mode_middleware(cookies, context):
+    """MaintenanceModeMiddleware is always wired into the generated project."""
+    result = cookies.bake(extra_context=context)
+    assert result.exit_code == 0
+    assert result.exception is None
+
+    middleware_content = (result.project_path / "core" / "restframework" / "middleware.py").read_text()
+    assert "class MaintenanceModeMiddleware" in middleware_content
+    assert "SYS_4503" in middleware_content
+
+    settings_content = (result.project_path / "config" / "settings" / "base.py").read_text()
+    assert "core.restframework.middleware.MaintenanceModeMiddleware" in settings_content
+
+    assert (result.project_path / "core" / "restframework" / "tests" / "test_middleware.py").is_file()

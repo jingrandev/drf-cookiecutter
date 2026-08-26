@@ -103,6 +103,7 @@ AUTH_USER_MODEL = "authentication.User"
 MIDDLEWARE = [
     "django_guid.middleware.guid_middleware",
     "django.middleware.security.SecurityMiddleware",
+    "core.restframework.middleware.MaintenanceModeMiddleware",
     "core.restframework.middleware.UnifiedAPIExceptionMiddleware",
     {%- if cookiecutter.use_redis == "yes" %}
     "libs.throttling.middleware.ThrottleBlacklistMiddleware",
