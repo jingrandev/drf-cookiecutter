@@ -299,7 +299,7 @@ CACHES = {
     {%- if cookiecutter.use_celery == "yes" %}
     "celery_results": {
         "BACKEND": "libs.cache.backend.EnhancedRedisCache",
-        "LOCATION": env("CELERY_RESULTS_REDIS_URL", default="redis://localhost:6379/2"),
+        "LOCATION": env("CELERY_RESULTS_URL", default="redis://localhost:6379/2"),
         "OPTIONS": {
             "CLIENT_CLASS": "libs.cache.client.EnhancedRedisClient",
         },
@@ -368,7 +368,7 @@ DJ_REDIS_PANEL_SETTINGS = {
         "cache": {"url": env("REDIS_URL", default="redis://localhost:6379/0")},
         {%- if cookiecutter.use_celery == "yes" %}
         "celery-broker": {"url": env("CELERY_BROKER_URL", default="redis://localhost:6379/1")},
-        "celery-results": {"url": env("CELERY_RESULTS_REDIS_URL", default="redis://localhost:6379/2")},
+        "celery-results": {"url": env("CELERY_RESULTS_URL", default="redis://localhost:6379/2")},
         {%- endif %}
     },
 }
